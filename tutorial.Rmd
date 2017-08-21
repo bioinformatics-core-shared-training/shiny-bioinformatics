@@ -49,13 +49,17 @@ biocLite("breastCancerNKI")
 
 # First look at a Shiny app
 
-Create a new app with the following menus (call it `test` or something)
+Create a new app by the following menu options in RStudio. When prompted for a name of the app, call it `test` or something.
 
 **File** -> **New File** -> **Shiny web app**
 
-A file called `app.R` should appear in RStudiom and RStudio will have created a new directory with the app name that you specified (e.g. `test`). The `app.R` script defines the UI (user interface), app layout, code run by the server and ends with an instruction to run the app. Note that you might see some older Shiny apps that were defined in two separate files (`UI.R` and `server.R`). If you view this file in RStudio the option to run the app will appear in the top toolbar. Hitting the **Run App** Button will create a new RStudio window this example app. Congratulations, you have just created your first shiny app `r emo::ji("tada")`
+A file called `app.R` should appear in RStudio, and RStudio will have created a new directory with the app name that you specified (e.g. `test`). The `app.R` script defines the UI (user interface), code to be run by the server and ends with an instruction to run the app. Note that you might see some older Shiny apps that were defined in two separate files (`UI.R` and `server.R`). If you view this file in RStudio the option to run the app will appear in the top toolbar. 
 
-You could also view in a web browser. Please note that when presented "live" the Shiny app will appear below. On the static HTML pages linked from the course website, there will be *grey box* below.
+![](images/run-app.png)
+
+Hitting the **Run App** Button will create a new RStudio window this example app. Congratulations, you have just created your first shiny app `r emo::ji("tada")`
+
+You could also view in a web browser. ***Please note that when presented "live" the Shiny app will appear below. On the static HTML pages linked from the course website, there will be grey box below. ***
 
 ```{r echo=FALSE}
 
@@ -132,14 +136,14 @@ ui <- fluidPage(
 )
 ```
 
+- The layout of the app is using the sidebar style. 
 - There are two panels in the app layout; defined by the `sidebarPanel` and `mainPanel` arguments respectively
-- The UI part of the script defines an argument `bins` that is used to define the parameters of how the histogram is displayed. This is the basic principle of Shiny. 
 - A slider bar is used to choose a different value of `bins`, and this value can be accessed as `input$bins` from within in the `server` function (see later).  
-
+- A plot is displayed in the main panel
 
 ## HTML and other formatting
 
-TML elements can be added by a number of functions that parallel common HTML tags. e.g. `h1`, `h2` for headers and `a` to create a hyperlink. The `helpText` function can also be used to add explanatory text below a particular input option. In the following code we add headers, some help text and a hyperlink to a reference about histograms. Images can also be added using the `img` function.
+HTML elements can be added by a number of functions that parallel common HTML tags. e.g. `h1`, `h2` for headers and `a` to create a hyperlink. The `helpText` function can also be used to add explanatory text below a particular input option. In the following code we add headers, some help text and a hyperlink to a reference about histograms. Images can also be added using the `img` function.
 
 You can try copy-and-pasting this code over the default `sidebarPanel` function call in the `app.R` file you have created.
 
@@ -359,21 +363,16 @@ However, as these are not valid names of colours in R, we need to do some extra 
    })
 ```
 
-Sometimes you might want to use some kind of control structure to translate the input parameters into the arguments for plotting. 
+## Exercises
 
-```{r eval=FALSE}
-  
-  colour <- input$colour
-  # For some bizarre reason we might want to confuse the user!
-  if (colour == "Red"){
-    mycolour <- "green"
-  } else if (colour == "Green"){
-    mycolour <- "blue"
-  } else {
-    mycolour <- "red"
-  }
-  hist(x, breaks = bins, col = mycolour, border = 'white')
-```
+- Allow the user to define the title on the plot by adding a `textInput`
+    + HINT: the `main` argument to the `hist` function lets you set the plot title.
+- The choice of red, green or blue is somewhat limiting. Create a dropdown box (`selectInput`) to allow the user to choose from any of the pre-defined colours in R. (HINT: the function `colours` returns the names of all valid colours as a vector)
+- OPTIONAL:- use `numericInput` boxes to allow the user to define a colour using its red, green and blue values.
+    + the `rgb` function will convert a set of numeric values into a hexademical string that can be used as an argument for plotting.
+    + the RGB value for red is `255,0,0`
+
+
 
 
 ```{r echo=FALSE}
@@ -390,17 +389,14 @@ ui <- fluidPage(
       sidebarPanel(
         h1("Data  Exploration"),
         h2("The histogram"),
-        radioButtons("colour","Colour of histogram",choices=c("Red","Green","Blue"),selected="Red"),
+        selectInput(inputId = "colour","Colour of histogram",choices=colours(),selected="red"),
          sliderInput("bins",
                      "Number of bins:",
                      min = 1,
                      max = 50,
                      value = 30),
         helpText("This slider defines the number of bins to divided the data into"),
-        a("More about the histogram here", href="https://en.wikipedia.org/wiki/Histogram"),
-        br(),
-        p("App developed by University of Cambridge"),
-        img(src="http://www.cruk.cam.ac.uk/sites/all/themes/cambridge_theme/images/interface/main-logo-small.png")
+        textInput(inputId = "title",label="Histogram Title",value = "Histogram of x")
       ),
       
       # Show a plot of the generated distribution
@@ -421,40 +417,21 @@ server <- function(input, output) {
       # draw the histogram with the specified number of bins
 
       
-        colour <- input$colour
-
-        if (colour == "Red"){
-          mycolour <- "green"
-        } else if (colour == "Green"){
-          mycolour <- "blue"
-        } else {
-          mycolour <- "red"
-        }
-      
-      hist(x, breaks = bins, col = mycolour, border = 'white')
+      hist(x, breaks = bins, col = input$colour, border = 'white',main=input$title)
    })
    
 }
 
 # Run the application 
 shinyApp(ui = ui, server = server)
+
 ```
-
-
-## Exercises
-
-- Allow the user to define the title on the plot by adding a `textInput`
-    + HINT: the `main` argument to the `hist` function lets you set the plot title.
-- The choice of red, green or blue is somewhat limiting. Create a dropdown box (`selectInput`) to allow the user to choose from any of the pre-defined colours in R. (HINT: the function `colours` returns the names of all valid colours as a vector)
-- OPTIONAL:- use `numericInput` boxes to allow the user to define a colour using its red, green and blue values.
-    + the `rgb` function will convert a set of numeric values into a hexademical string that can be used as an argument for plotting.
-    + the RGB value for red is `255,0,0`
 
 
 ## Outputs
 
-We can add new outputs by adding new arguments to `mainPanel`. Let's say we want to show a boxplot of the data in addition to the histogram. First we add a call to `plotOutput` in the `mainPanel` code.
-
+We can add new outputs by adding new arguments to `mainPanel`. Let's say we want to show a boxplot of the data in addition to the histogram. First we add a call to `plotOutput` in the `mainPanel` code with our choice of object name. Let's call it `boxPlot`
+ 
 
 
 ```{r eval=FALSE}
@@ -469,9 +446,9 @@ We can add new outputs by adding new arguments to `mainPanel`. Let's say we want
 
 ```
 
-We then need to modify the server script to create the `boxPlot` object that we want to display. Having already created a histogram, we should just need a function that runs the command `boxplot(x)` and assigns the value to `output$boxPlot`.
+We now need to modify the server code to create an object `ouput$boxPlot` using the `renderPlot` function. Inside the body of `renderPlot` we write the code to create the boxplot.
 
-However, the following code is incorrect. Can you work out why? `r emo::ji("thinking")`
+However, the following code is incorrect. Can you work out why? `r emo::ji("question")`
 
 ```{r eval=FALSE}
 server <- function(input, output) {
@@ -543,11 +520,7 @@ server <- function(input, output) {
       
       hist(x, breaks = bins, col = input$colour, border = 'white',main=input$title)
    })
-   
-   output$summary <- renderPrint({
-     x <- faithful[,2]
-     summary(x)
-   })
+
    
    output$boxPlot <- renderPlot({
       boxplot(x,horizontal = TRUE,col=input$colour)
@@ -618,6 +591,80 @@ server <- function(input, output) {
 }
 ```
 
+
+```{r echo=FALSE}
+
+library(shiny)
+
+# Define UI for application that draws a histogram
+ui <- fluidPage(
+   
+   # Application title
+   titlePanel("Old Faithful Geyser Data"),
+   
+   # Sidebar with a slider input for number of bins 
+   sidebarLayout(
+      sidebarPanel(
+        h1("Data  Exploration"),
+        h2("The histogram"),
+        radioButtons("colour","Colour of histogram",choices=c("red","green","blue"),selected="red"),
+         sliderInput("bins",
+                     "Number of bins:",
+                     min = 1,
+                     max = 50,
+                     value = 30),
+        helpText("This slider defines the number of bins to divided the data into"),
+        a("More about the histogram here", href="https://en.wikipedia.org/wiki/Histogram"),
+        br(),
+        p("App developed by University of Cambridge"),
+        img(src="http://www.cruk.cam.ac.uk/sites/all/themes/cambridge_theme/images/interface/main-logo-small.png")
+      ),
+      
+      # Show a plot of the generated distribution
+      mainPanel(
+         textOutput("chosenBins"),
+         plotOutput("distPlot"),
+         verbatimTextOutput("summary"),
+         plotOutput("boxPlot")
+      )
+   )
+)
+
+server <- function(input, output) {
+     x    <- faithful[, 2] 
+         
+   output$distPlot <- renderPlot({
+      # generate bins based on input$bins from ui.R
+      bins <- seq(min(x), max(x), length.out = input$bins + 1)
+      
+      # draw the histogram with the specified number of bins
+
+      
+      hist(x, breaks = bins, col = input$colour, border = 'white')
+   })
+   
+   output$boxPlot <- renderPlot({
+
+       boxplot(x,col=input$colour)
+
+   })
+   
+   output$summary <- renderPrint({
+     summary(x)
+   })
+   
+   output$chosenBins <- renderText({
+     
+     paste("Number of bins to draw histogram", input$bins)
+     
+   })
+}
+
+# Run the application 
+shinyApp(ui = ui, server = server)
+```
+
+
 The results panel is now getting a bit cluttered. If we wish we could change the layout so each distinct output is displayed in a different panel. This can be done with the `tabsetPanel` function.
 
 ```{r eval=FALSE}
@@ -636,6 +683,85 @@ The results panel is now getting a bit cluttered. If we wish we could change the
 
 
 ```{r echo=FALSE}
+library(shiny)
+
+# Define UI for application that draws a histogram
+ui <- fluidPage(
+   
+   # Application title
+   titlePanel("Old Faithful Geyser Data"),
+   
+   # Sidebar with a slider input for number of bins 
+   sidebarLayout(
+      sidebarPanel(
+        h1("Data  Exploration"),
+        h2("The histogram"),
+        radioButtons("colour","Colour of histogram",choices=c("red","green","blue"),selected="red"),
+         sliderInput("bins",
+                     "Number of bins:",
+                     min = 1,
+                     max = 50,
+                     value = 30),
+        helpText("This slider defines the number of bins to divided the data into"),
+        a("More about the histogram here", href="https://en.wikipedia.org/wiki/Histogram"),
+        br(),
+        p("App developed by University of Cambridge"),
+        img(src="http://www.cruk.cam.ac.uk/sites/all/themes/cambridge_theme/images/interface/main-logo-small.png")
+      ),
+      
+      # Show a plot of the generated distribution
+      mainPanel(
+        tabsetPanel(
+          tabPanel("Bins", textOutput("chosenBins")),
+          tabPanel("Histogram",plotOutput("distPlot")),
+          tabPanel("Summary", verbatimTextOutput("summary")),
+          tabPanel("Boxplot", plotOutput("boxPlot"))
+          
+        )
+
+      )
+   )
+)
+
+# Define server logic required to draw a histogram
+server <- function(input, output) {
+    x    <- faithful[, 2] 
+   output$distPlot <- renderPlot({
+      # generate bins based on input$bins from ui.R
+
+      bins <- seq(min(x), max(x), length.out = input$bins + 1)
+      
+      # draw the histogram with the specified number of bins
+
+      
+      hist(x, breaks = bins, col = input$colour, border = 'white',main=input$title)
+   })
+   
+   output$summary <- renderPrint({
+     summary(x)
+   })
+   
+   output$boxPlot <- renderPlot({
+      boxplot(x,horizontal = TRUE,col=input$colour)
+     
+   })
+   
+      output$chosenBins <- renderText({
+     
+     paste("Number of bins to draw histogram", input$bins)
+     
+   })
+   
+}
+
+# Run the application 
+shinyApp(ui = ui, server = server)
+
+```
+
+The final code for the app is given below:-
+
+```{r eval=FALSE}
 library(shiny)
 
 # Define UI for application that draws a histogram
