@@ -6,7 +6,7 @@ output: html_document
 runtime: shiny
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include=FALSE,eval=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 devtools::install_github("hadley/emo")
 ```
@@ -26,11 +26,11 @@ biocLite("breastCancerNKI")
 
 ## References
 
-- Shout-out to Monash Bioinformatics Platform for making their [course notes available](https://monashbioinformaticsplatform.github.io/2016-11-03-r-shiny/) `r emo::ji("+1")`
+- Thanks to Monash Bioinformatics Platform for making their [course notes available](https://monashbioinformaticsplatform.github.io/2016-11-03-r-shiny/) `r emo::ji("+1")`
 - Rstudio have a good collection of [tutorial videos](http://shiny.rstudio.com/tutorial/)
 - The [Shiny showcase](https://www.rstudio.com/products/shiny/shiny-user-showcase/)
 - A [Shiny cheatsheet](http://shiny.rstudio.com/articles/cheatsheet.html) to print off and pin to your desk
-- Shiny Exercises [Part 1](http://r-exercises.com/2016/12/12/building-shiny-app-exercises-part-1/) and [Part 2](http://r-exercises.com/2016/12/18/building-shiny-app-exercises-part-2/)
+- [Shiny articles](https://shiny.rstudio.com/articles/); more advanced use-cases discussed some features that we won't cover in this workshop
 - Videos from the [Shiny developers conference](https://www.rstudio.com/resources/webinars/shiny-developer-conference/)
 
 ## What is Shiny
