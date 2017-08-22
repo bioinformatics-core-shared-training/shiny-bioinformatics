@@ -2,7 +2,10 @@
 title: "Shiny for Bioinformatics Tutorial"
 author: "Mark Dunning"
 date: '`r format(Sys.time(), "Last modified: %d %b %Y")`'
-output: html_document
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
 runtime: shiny
 ---
 
@@ -13,7 +16,10 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # A use-case in Genomics
 
-We are going to develop a simple app to allow a user to perform statistical tests and generate plots from a published dataset. This seems to be quite a common use-case and can be automated through Shiny in a relatively painless manner. We will be using the [breastCancerNKI](http://bioconductor.org/packages/release/data/experiment/html/breastCancerNKI.html) dataset, which is already available as part of Bioconductor. If you didn't install this already, you will need to do:-
+We are going to develop a simple app to allow a user to perform statistical tests and generate plots from a published dataset. For us, this seems to be quite a common use-case and in the long-run can be a time-saver for the Bioinformatician and encourage the wet-lab Biologists to make their own queries. Assuming that you know how to interrogate and analyse a given gene in R, it is not much more effort to build the interface with Shiny. The advantage being that you can use your existing familiarity with R and not having to learn new languages.
+
+
+We will be using the [breastCancerNKI](http://bioconductor.org/packages/release/data/experiment/html/breastCancerNKI.html) dataset, which is already available as part of Bioconductor. If you didn't install this already, you will need to do:-
 
 ```{r eval=FALSE}
 source("http://www.bioconductor.org/biocLite.R")
@@ -21,6 +27,9 @@ biocLite("breastCancerNKI")
 ```
 
 Briefly, this dataset comprises the gene expression profiling of breast cancer patients. There is extensive clinical data available, but we will be focusing on the ER (Estrogen Receptor) status of each patient. This variable (either positive or negative) is known to predict survival.
+
+
+The R code for this app is available as part of the materials for this course [cancer-app.R](cancer-app.R)
 
 The UI for the app will contain a drop-down where the user can type the name of the gene they wish to interrogate. We will give a limited set of options and a default value of `ESR1`, which we expect to show a significant difference between the conditions.
 
@@ -52,7 +61,7 @@ The `server` code has to deal with loading the Bioconductor package and creating
 
 Note that this code only needs to be run once for the initial setup of the app. It could be placed in a separate script and run with the `source(...)` function to make the code a bit cleaner.
 
-We could also include code here for loading R objects or reading from a file as required.
+*Note that we could also include code here for loading R objects or reading from a file as required.*
 
 ```{r message=FALSE}
   library(breastCancerNKI)
@@ -63,7 +72,7 @@ We could also include code here for loading R objects or reading from a file as 
   er.status <- pData(nki)$er
 ```
 
-The matrix `expression.values` contains the values we would like to plot and the `er.status` vector is the categorical variable corresponding to ER status. 
+The matrix `expression.values` contains the values we would like to plot; each row is a different gene and the columns are breast cancer patients. The `er.status` vector is the categorical variable corresponding to ER status. 
 
 ```{r}
 table(er.status)
@@ -89,7 +98,7 @@ probe.id <- as.character(features$probe[match(gene, features$HUGO.gene.symbol)])
 values <- expression.values[probe.id,]
 ```
 
-In this simple app, the user is expected to type the name of the gene into a text box. The value they have typed can be retrieved from the server code using `input$thegene`.
+In this first iteration of the app, the user is expected to type the name of the gene from a drop-down list. The value they have typed can be retrieved from the server code using `input$thegene`.
 
 The code for the app then becomes:-
 
@@ -187,7 +196,6 @@ server <- function(input, output) {
 shinyApp(ui = ui, server = server)
 ```
 
-## Customising the plot
 
 As we have seen previously, we can also add options to allow the user to customise the appearance of the plot
 
@@ -239,6 +247,7 @@ shinyApp(ui = ui, server = server)
 ```
 
 
+
 ```{r echo=FALSE}
 library(shiny)
 
@@ -287,57 +296,12 @@ shinyApp(ui = ui, server = server)
 ```
 
 
-## Introducing "reactives"
+## Exercise
 
-https://shiny.rstudio.com/tutorial/lesson6/
-
-Unfortunately, we have introduced some inefficiency into our app. The code inside the `renderPlot` function will be triggered whenever the user changes the options for the gene name or the color of the plot. This code includes the steps to filter the expression data based on the gene that is currently selected. It make sense for this code to be re-run when a new gene is selected, but not if a different colour is selected (which is the current state of affairs). 
-
-A solution is to define a *reactive* function. These are special functions in `shiny` that caches it's values, and will only be re-run when any of these values become outdated. 
-
-The functions can be called from within other functions inside the server script. For example, code that creates a plot. The first time the function is called, the output values are stored in memory. The next time the function is called, the function will check if any of the inputs have been updated. If not, the results of the previous calculation will be returned. This is ideal behaviour in the situation we have described.
-
-In our example, we might define a function `filterByExpression` which basically contains the steps we already had inside the boxplot code. The last line of the function defines the object that is returned. 
-
-Within the `renderPlot` function we can call the `filterByExpression` function to retrieve the values for a particular gene.
-
-We add a `Sys.sleep()` statement to help illustrate the fact that `filterByExpression` is only run when the name of the gene is changed by the user.
-
-```{r eval=FALSE}
-server <- function(input, output) {
-   
-  library(breastCancerNKI)
-  
-  data(nki)
-  expression.values <- exprs(nki)
-  features <- fData(nki)
-  er.status <- pData(nki)$er
-  
-  filterByExpression <- reactive({
-     gene <- input$thegene
-     probe.id <- as.character(features$probe[match(gene, features$HUGO.gene.symbol)])
-      Sys.sleep(10)
-     expression.values[probe.id,]
-  })
-  
-   output$boxplot <- renderPlot({
-
-     gene <- input$thegene
-     probe.id <- as.character(features$probe[match(gene, features$HUGO.gene.symbol)])
-     
-     values <- filterByExpression()
-     
-     boxplot(values ~ er.status,col=input$colour)
-   })
-   
-}
-
-```
-
-
-Try changing the values for gene name and boxplot colour in the following shiny app. 
+- Add an output which is the result of running a two-sided t-test to assess whether the selected gene has different expression level in ER positive versus ER negative tumours
 
 ```{r echo=FALSE}
+
 library(shiny)
 
 ui <- fluidPage(
@@ -355,7 +319,8 @@ ui <- fluidPage(
       
       # Show a plot of the generated distribution
       mainPanel(
-         plotOutput("boxplot")
+         plotOutput("boxplot"),
+         verbatimTextOutput("testResult")
       )
    )
 )
@@ -369,13 +334,14 @@ server <- function(input, output) {
   features <- fData(nki)
   er.status <- pData(nki)$er
   
-  filterByExpression <- reactive({
-     gene <- input$thegene
+  filterByExpression <- function(){
+    gene <- input$thegene
      probe.id <- as.character(features$probe[match(gene, features$HUGO.gene.symbol)])
-          Sys.sleep(10)
+      Sys.sleep(10)
      expression.values[probe.id,]
-  })
+  }
   
+    
    output$boxplot <- renderPlot({
 
      gene <- input$thegene
@@ -386,9 +352,105 @@ server <- function(input, output) {
      boxplot(values ~ er.status,col=input$colour)
    })
    
+     output$testResult <- renderPrint(
+     {
+     values <- filterByExpression()
+     t.test(values ~ er.status)
+     }
+   )
+  
 }
-
 # Run the application 
 shinyApp(ui = ui, server = server)
+```
+
+
+A R script to run the app we just described is supplied in the file [cancer-app-2.R](cancer-app-2.R). If you open the R script in RStudio, you will see that a function has been created to retrieve the gene expression values for a particular gene. The code chunks for the boxplot and t-test then call this code. Generally, it is a good idea to re-use code in this manner `r emo::ji("+1")`. We have added a `Sys.sleep` call to make the code wait for a while before returning the final data frame. This is to simulate the use-case when the filtering operations we need to perform require more computation than the simple dataset presented here.
+
+
+
+```{r}
+
+  filterByExpression <- function(){
+    gene <- input$thegene
+     probe.id <- as.character(features$probe[match(gene, features$HUGO.gene.symbol)])
+      Sys.sleep(10)
+     expression.values[probe.id,]
+  }
+
+```
+
+## Exercise
+
+- Run the app described by the file [cancer-app-2.R](cancer-app-2.R). In particular, change the option for colour whilst keeping the gene name the same
+- What do you notice?
+    + does it seem efficient to run the app in this manner?
+
+## Introducing "reactives"
+
+https://shiny.rstudio.com/tutorial/lesson6/
+
+Unfortunately, there is some inefficiency into our app. The code inside the `filterByExpression` function will be triggered whenever the user requests a new plot by changing the gene name or  ***or*** the color of the plot. This code includes the steps to filter the expression data based on the gene that is currently selected. It makes sense for this code to be re-run when a new gene is selected, but not if a different colour is selected (which is the current situation). It would be much better to retrieve the data for a particular gene once only.
+
+A solution is to define a *reactive* function. These are special functions in `shiny` that caches it's values, and will only be re-run when any of these values become outdated. 
+
+- The first time the function is called, the output values are stored in memory
+- The next time the function is called, the function will check if the saved value is out of date (e.g. whether any of th inputs have been updated)
+  + If not, the saved values will be returned and no computation will be performed
+  + If an update is required, the function will be re-run and a new output output will be saved
+
+The R script [cancer-app-3.R](cancer-app-3.R) contains a slightly modified `server` script with `filterByExpression` being a `reactive` rather than a standard R function. 
+
+```{r eval=FALSE}
+  filterByExpression <- reactive({
+     gene <- input$thegene
+     probe.id <- as.character(features$probe[match(gene, features$HUGO.gene.symbol)])
+      Sys.sleep(10)
+     expression.values[probe.id,]
+  })
+
+```
+
+
+Try changing the values for gene name and boxplot colour in this new shiny app. You should notice that the plot colour can be changed instantaneously, whereas selecting a different gene triggers the `filterByExpression` function which includes the sleep statement.
+
+## Downloading the plot
+
+We can add the option to download the boxplot in pdf format. In the `UI` we create the button with `downloadButton`, specifying the name of the corresponding output object. The `server` code then 
+
+```{r eval=FALSE}
+
+   sidebarLayout(
+      sidebarPanel(
+         selectInput("thegene","Gene to Analyse",
+                     choices=c("ESR1","ERBB2","PTEN"),
+                       selected  = "ESR1"),
+                 radioButtons("colour","Colour of histogram",choices=c("red","green","blue"),selected="red"),
+         downloadButton("plotPDF",label="Download")
+      ),
+....
+  
+
+server <- function(input, output) {
+
+....
+  
+   output$plotPDF <- downloadHandler(
+    filename = "boxplot.pdf",   
+    content = function(file){
+     pdf(file)
+     gene <- input$thegene
+     probe.id <- as.character(features$probe[match(gene, features$HUGO.gene.symbol)])
+     
+     values <- filterByExpression()
+     
+     boxplot(values ~ er.status,col=input$colour)
+     dev.off()
+    }
+    
+...
+
+
+}    
 ```
 
