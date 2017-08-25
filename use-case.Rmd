@@ -388,8 +388,6 @@ A R script to run the app we just described is supplied in the file [cancer-app-
 
 ## Introducing "reactives"
 
-https://shiny.rstudio.com/tutorial/lesson6/
-
 Unfortunately, there is some inefficiency into our app. The code inside the `filterByExpression` function will be triggered whenever the user requests a new plot by changing the gene name or  ***or*** the color of the plot. This code includes the steps to filter the expression data based on the gene that is currently selected. It makes sense for this code to be re-run when a new gene is selected, but not if a different colour is selected (which is the current situation). It would be much better to retrieve the data for a particular gene once only.
 
 A solution is to define a *reactive* function. These are special functions in `shiny` that caches it's values, and will only be re-run when any of these values become outdated. 
@@ -414,9 +412,16 @@ The R script [cancer-app-3.R](cancer-app-3.R) contains a slightly modified `serv
 
 Try changing the values for gene name and boxplot colour in this new shiny app. You should notice that the plot colour can be changed instantaneously, whereas selecting a different gene triggers the `filterByExpression` function which includes the sleep statement.
 
+For more information on reactive programming, see the [RStudio article](https://shiny.rstudio.com/articles/reactivity-overview.html)
+
 ## Downloading the plot
 
-We can add the option to download the boxplot in pdf format. In the `UI` we create the button with `downloadButton`, specifying the name of the corresponding output object. The `server` code then 
+There are various options to allow users to [download data](https://shiny.rstudio.com/articles/download.html) from your app. 
+
+- create a clickable download button in the `UI` with `downloadButton`; specifying what the output object is to be called
+- use the `downloadHandler` function in the `server` script to define how the output file is created
+    + in our case, we use the `pdf` function to start writing graphics to a temporary file, which then get saved into the specified file name
+    + the name of the file can be hard-coded, or defined using a function call to get the current date (for example)
 
 ```{r eval=FALSE}
 
@@ -437,6 +442,7 @@ server <- function(input, output) {
   
    output$plotPDF <- downloadHandler(
     filename = "boxplot.pdf",   
+    ## filename could also be the result of a function call
     content = function(file){
      pdf(file)
      gene <- input$thegene
