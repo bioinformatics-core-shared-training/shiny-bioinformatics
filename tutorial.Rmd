@@ -53,7 +53,7 @@ Create a new app by the following menu options in RStudio. When prompted for a n
 
 **File** -> **New File** -> **Shiny web app**
 
-A file called `app.R` should appear in RStudio, and RStudio will have created a new directory with the app name that you specified (e.g. `test`). The `app.R` script defines the UI (user interface), code to be run by the server and ends with an instruction to run the app. Note that you might see some older Shiny apps that were defined in two separate files (`UI.R` and `server.R`). If you view this file in RStudio the option to run the app will appear in the top toolbar. 
+A file called `app.R` should appear in RStudio, and RStudio will have created a new directory with the app name that you specified (e.g. `test`). The `app.R` script defines the UI (user interface), code to be run by the server and ends with an instruction to run the app. Note that you might see some older Shiny apps that were defined in two separate files (`UI.R` and `server.R`). If you view this file in RStudio, the option to run the app will appear in the top toolbar. 
 
 ![](images/run-app.png)
 
@@ -348,7 +348,7 @@ Note, that the capatilisation of the colours is important in the definition of t
 
 ```
 
-However, as these are not valid names of colours in R, we need to do some extra processing before we can call the `hist` function. We can access the value of `input$colour` and modify accordingly. For example, we could use the `tolower` function to convert to lower case. 
+However, as these are not valid names of colours in R, we need to do some extra processing before we can call the `hist` function. We can access the value of `input$colour` and modify accordingly. For example, we could use the `tolower` function to convert to lower case.
 
 ```{r eval=FALSE}
    output$distPlot <- renderPlot({
@@ -362,6 +362,25 @@ However, as these are not valid names of colours in R, we need to do some extra 
       hist(x, breaks = bins, col = mycolour, border = 'white')
    })
 ```
+
+Or we could have some kind of control structure
+
+```{r eval=FALSE}
+
+if(input$color == "Red"){
+  
+  ....
+  
+} else if (input$colour == "Green"){
+  
+  ....
+  
+}
+
+
+
+```
+
 
 ## Exercises
 
@@ -448,7 +467,7 @@ We can add new outputs by adding new arguments to `mainPanel`. Let's say we want
 
 We now need to modify the server code to create an object `ouput$boxPlot` using the `renderPlot` function. Inside the body of `renderPlot` we write the code to create the boxplot.
 
-However, the following code is incorrect. Can you work out why? `r emo::ji("question")`
+However, the following code is incorrect. Can you work out why? `r emo::ji("thinking")`
 
 ```{r eval=FALSE}
 server <- function(input, output) {
