@@ -216,14 +216,14 @@ div.tocify {
 
 <h1 class="title toc-ignore">Shiny for Bioinformatics Tutorial</h1>
 <h4 class="author"><em>Mark Dunning</em></h4>
-<h4 class="date"><em>Last modified: 22 Aug 2017</em></h4>
+<h4 class="date"><em>Last modified: 07 Sep 2017</em></h4>
 
 </div>
 
 
 <div id="section-a-use-case-in-genomics" class="section level1">
 <h1>A use-case in Genomics</h1>
-<p>We are going to develop a simple app to allow a user to perform statistical tests and generate plots from a published dataset. For us, this seems to be quite a common use-case and in the long-run can be a time-saver for the Bioinformatician and encourage the wet-lab Biologists to make their own queries. Assuming that you know how to interrogate and analyse a given gene in R, it is not much more effort to build the interface with Shiny. The advantage being that you can use your existing familiarity with R and not having to learn new languages.</p>
+<p>We are going to develop a simple app to allow a user to perform statistical tests and generate plots from a published dataset. For us, this seems to be quite a common use-case. In the long-run can be a time-saver for the Bioinformatician to encourage the wet-lab Biologists to make their own queries. Assuming that you know how to interrogate and analyse a given gene in R, it is not much more effort to build the interface with Shiny. The advantage being that you can use your existing familiarity with R and not having to learn new languages.</p>
 <p>We will be using the <a href="http://bioconductor.org/packages/release/data/experiment/html/breastCancerNKI.html">breastCancerNKI</a> dataset, which is already available as part of Bioconductor. If you didn’t install this already, you will need to do:-</p>
 <pre class="r"><code>source(&quot;http://www.bioconductor.org/biocLite.R&quot;)
 biocLite(&quot;breastCancerNKI&quot;)</code></pre>
@@ -334,7 +334,7 @@ server &lt;- function(input, output) {
 
 # Run the application 
 shinyApp(ui = ui, server = server)</code></pre>
-<iframe data-deferred-src="app1fea56245de892782ce50c648b723f83/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
+<iframe data-deferred-src="app5d74910f5978e59cb1632c9bc11ba1d2/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
 <p>As we have seen previously, we can also add options to allow the user to customise the appearance of the plot</p>
 <pre class="r"><code>library(shiny)
 
@@ -380,18 +380,26 @@ server &lt;- function(input, output) {
 
 # Run the application 
 shinyApp(ui = ui, server = server)</code></pre>
-<iframe data-deferred-src="app9c54173ec59e8cec9302ecb8f7fac89f/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
+<iframe data-deferred-src="appcf41e152b260e0efa1c5b249c4d3d798/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
 <div id="section-exercise" class="section level2">
 <h2>Exercise</h2>
 <ul>
-<li>Add an output which is the result of running a two-sided t-test to assess whether the selected gene has different expression level in ER positive versus ER negative tumours</li>
+<li>Add an output which is the result of running a two-sided t-test to assess whether the selected gene has different expression level in ER positive versus ER negative tumours
+<ul>
+<li>HINT we suggest using the <code>t.test</code> function</li>
+</ul></li>
 </ul>
-<iframe data-deferred-src="app8d4b2c5744a2cb4fedb17384649ecf71/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
-<p>A R script to run the app we just described is supplied in the file <a href="cancer-app-2.R" class="uri">cancer-app-2.R</a>. If you open the R script in RStudio, you will see that a function has been created to retrieve the gene expression values for a particular gene. The code chunks for the boxplot and t-test then call this code. Generally, it is a good idea to re-use code in this manner 👍. We have added a <code>Sys.sleep</code> call to make the code wait for a while before returning the final data frame. This is to simulate the use-case when the filtering operations we need to perform require more computation than the simple dataset presented here.</p>
+<iframe data-deferred-src="app87d28ae83e0157d677e3406905779776/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
+</div>
+<div id="section-code-re-use" class="section level2">
+<h2>Code Re-use</h2>
+<p>Hopefully you will have recognised that the code required to apply the t-test and the boxplot is pretty similar, and share the common step of filtering our expression matrix according to gene. Hence, we can write this filtering procedure as a function that is called when the boxplots and t-test output are produced.</p>
+<p>An R script to run the app we just described is supplied in the file <a href="cancer-app-2.R" class="uri">cancer-app-2.R</a>. If you open the R script in RStudio, you will see that a function has been created to retrieve the gene expression values for a particular gene. The code chunks for the boxplot and t-test then call this code. Generally, it is a good idea to re-use code in this manner 👍.</p>
+<p>We have added a <code>Sys.sleep</code> call to make the code wait for a while before returning the final data frame. This is to simulate the use-case when the filtering operations we need to perform require more computation than the simple dataset presented here.</p>
 <pre class="r"><code>  filterByExpression &lt;- function(){
     gene &lt;- input$thegene
      probe.id &lt;- as.character(features$probe[match(gene, features$HUGO.gene.symbol)])
-      Sys.sleep(10)
+      Sys.sleep(5)
      expression.values[probe.id,]
   }</code></pre>
 </div>
@@ -401,13 +409,13 @@ shinyApp(ui = ui, server = server)</code></pre>
 <li>Run the app described by the file <a href="cancer-app-2.R" class="uri">cancer-app-2.R</a>. In particular, change the option for colour whilst keeping the gene name the same</li>
 <li>What do you notice?
 <ul>
+<li>should changing the colour of the boxplot cause you to filter the data again?</li>
 <li>does it seem efficient to run the app in this manner?</li>
 </ul></li>
 </ul>
 </div>
 <div id="section-introducing-reactives" class="section level2">
 <h2>Introducing “reactives”</h2>
-<p><a href="https://shiny.rstudio.com/tutorial/lesson6/" class="uri">https://shiny.rstudio.com/tutorial/lesson6/</a></p>
 <p>Unfortunately, there is some inefficiency into our app. The code inside the <code>filterByExpression</code> function will be triggered whenever the user requests a new plot by changing the gene name or <strong><em>or</em></strong> the color of the plot. This code includes the steps to filter the expression data based on the gene that is currently selected. It makes sense for this code to be re-run when a new gene is selected, but not if a different colour is selected (which is the current situation). It would be much better to retrieve the data for a particular gene once only.</p>
 <p>A solution is to define a <em>reactive</em> function. These are special functions in <code>shiny</code> that caches it’s values, and will only be re-run when any of these values become outdated.</p>
 <ul>
@@ -420,14 +428,23 @@ shinyApp(ui = ui, server = server)</code></pre>
 <pre class="r"><code>  filterByExpression &lt;- reactive({
      gene &lt;- input$thegene
      probe.id &lt;- as.character(features$probe[match(gene, features$HUGO.gene.symbol)])
-      Sys.sleep(10)
+      Sys.sleep(5)
      expression.values[probe.id,]
   })</code></pre>
 <p>Try changing the values for gene name and boxplot colour in this new shiny app. You should notice that the plot colour can be changed instantaneously, whereas selecting a different gene triggers the <code>filterByExpression</code> function which includes the sleep statement.</p>
+<p>For more information on reactive programming, see the <a href="https://shiny.rstudio.com/articles/reactivity-overview.html">RStudio article</a></p>
 </div>
-<div id="section-downloading-the-plot" class="section level2">
-<h2>Downloading the plot</h2>
-<p>We can add the option to download the boxplot in pdf format. In the <code>UI</code> we create the button with <code>downloadButton</code>, specifying the name of the corresponding output object. The <code>server</code> code then</p>
+<div id="section-actions.-e.g.downloading-the-plot" class="section level2">
+<h2>Actions. e.g. downloading the plot</h2>
+<p>There are various options to allow users to <a href="https://shiny.rstudio.com/articles/download.html">download data</a> from your app.</p>
+<ul>
+<li>create a clickable download button in the <code>UI</code> with <code>downloadButton</code>; specifying what the output object is to be called</li>
+<li>use the <code>downloadHandler</code> function in the <code>server</code> script to define how the output file is created
+<ul>
+<li>in our case, we use the <code>pdf</code> function to start writing graphics to a temporary file, which then get saved into the specified file name</li>
+<li>the name of the file can be hard-coded, or defined using a function call to get the current date (for example)</li>
+</ul></li>
+</ul>
 <pre class="r"><code>   sidebarLayout(
       sidebarPanel(
          selectInput(&quot;thegene&quot;,&quot;Gene to Analyse&quot;,
@@ -445,6 +462,7 @@ server &lt;- function(input, output) {
   
    output$plotPDF &lt;- downloadHandler(
     filename = &quot;boxplot.pdf&quot;,   
+    ## filename could also be the result of a function call
     content = function(file){
      pdf(file)
      gene &lt;- input$thegene
@@ -460,6 +478,7 @@ server &lt;- function(input, output) {
 
 
 }    </code></pre>
+<iframe data-deferred-src="app93162992ee092b6f4596f9fc6e861ff5/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
 </div>
 </div>
 

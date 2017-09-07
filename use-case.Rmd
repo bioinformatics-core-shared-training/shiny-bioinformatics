@@ -16,7 +16,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # A use-case in Genomics
 
-We are going to develop a simple app to allow a user to perform statistical tests and generate plots from a published dataset. For us, this seems to be quite a common use-case and in the long-run can be a time-saver for the Bioinformatician and encourage the wet-lab Biologists to make their own queries. Assuming that you know how to interrogate and analyse a given gene in R, it is not much more effort to build the interface with Shiny. The advantage being that you can use your existing familiarity with R and not having to learn new languages.
+We are going to develop a simple app to allow a user to perform statistical tests and generate plots from a published dataset. For us, this seems to be quite a common use-case.  In the long-run can be a time-saver for the Bioinformatician to encourage the wet-lab Biologists to make their own queries. Assuming that you know how to interrogate and analyse a given gene in R, it is not much more effort to build the interface with Shiny. The advantage being that you can use your existing familiarity with R and not having to learn new languages.
 
 
 We will be using the [breastCancerNKI](http://bioconductor.org/packages/release/data/experiment/html/breastCancerNKI.html) dataset, which is already available as part of Bioconductor. If you didn't install this already, you will need to do:-
@@ -299,6 +299,7 @@ shinyApp(ui = ui, server = server)
 ## Exercise
 
 - Add an output which is the result of running a two-sided t-test to assess whether the selected gene has different expression level in ER positive versus ER negative tumours
+    + HINT we suggest using the `t.test` function
 
 ```{r echo=FALSE}
 
@@ -337,7 +338,7 @@ server <- function(input, output) {
   filterByExpression <- function(){
     gene <- input$thegene
      probe.id <- as.character(features$probe[match(gene, features$HUGO.gene.symbol)])
-      Sys.sleep(10)
+      #Sys.sleep(10)
      expression.values[probe.id,]
   }
   
@@ -364,9 +365,14 @@ server <- function(input, output) {
 shinyApp(ui = ui, server = server)
 ```
 
+## Code Re-use
 
-A R script to run the app we just described is supplied in the file [cancer-app-2.R](cancer-app-2.R). If you open the R script in RStudio, you will see that a function has been created to retrieve the gene expression values for a particular gene. The code chunks for the boxplot and t-test then call this code. Generally, it is a good idea to re-use code in this manner `r emo::ji("+1")`. We have added a `Sys.sleep` call to make the code wait for a while before returning the final data frame. This is to simulate the use-case when the filtering operations we need to perform require more computation than the simple dataset presented here.
+Hopefully you will have recognised that the code required to apply the t-test and the boxplot is pretty similar, and share the common step of filtering our expression matrix according to gene. Hence, we can write this filtering procedure as a function that is called when the boxplots and t-test output are produced.
 
+An R script to run the app we just described is supplied in the file [cancer-app-2.R](cancer-app-2.R). If you open the R script in RStudio, you will see that a function has been created to retrieve the gene expression values for a particular gene. The code chunks for the boxplot and t-test then call this code. Generally, it is a good idea to re-use code in this manner `r emo::ji("+1")`. 
+
+
+We have added a `Sys.sleep` call to make the code wait for a while before returning the final data frame. This is to simulate the use-case when the filtering operations we need to perform require more computation than the simple dataset presented here.
 
 
 ```{r}
@@ -374,7 +380,7 @@ A R script to run the app we just described is supplied in the file [cancer-app-
   filterByExpression <- function(){
     gene <- input$thegene
      probe.id <- as.character(features$probe[match(gene, features$HUGO.gene.symbol)])
-      Sys.sleep(10)
+      Sys.sleep(5)
      expression.values[probe.id,]
   }
 
@@ -384,6 +390,7 @@ A R script to run the app we just described is supplied in the file [cancer-app-
 
 - Run the app described by the file [cancer-app-2.R](cancer-app-2.R). In particular, change the option for colour whilst keeping the gene name the same
 - What do you notice?
+    + should changing the colour of the boxplot cause you to filter the data again?
     + does it seem efficient to run the app in this manner?
 
 ## Introducing "reactives"
@@ -403,7 +410,7 @@ The R script [cancer-app-3.R](cancer-app-3.R) contains a slightly modified `serv
   filterByExpression <- reactive({
      gene <- input$thegene
      probe.id <- as.character(features$probe[match(gene, features$HUGO.gene.symbol)])
-      Sys.sleep(10)
+      Sys.sleep(5)
      expression.values[probe.id,]
   })
 
@@ -414,7 +421,7 @@ Try changing the values for gene name and boxplot colour in this new shiny app. 
 
 For more information on reactive programming, see the [RStudio article](https://shiny.rstudio.com/articles/reactivity-overview.html)
 
-## Downloading the plot
+## Actions. e.g. downloading the plot
 
 There are various options to allow users to [download data](https://shiny.rstudio.com/articles/download.html) from your app. 
 
@@ -459,4 +466,85 @@ server <- function(input, output) {
 
 }    
 ```
+
+
+```{r echo=FALSE}
+
+library(shiny)
+
+ui <- fluidPage(
+   
+   # Application title
+   titlePanel("Interrogating the NKI breast cancer dataset"),
+   
+   sidebarLayout(
+      sidebarPanel(
+         selectInput("thegene","Gene to Analyse",
+                     choices=c("ESR1","ERBB2","PTEN"),
+                       selected  = "ESR1"),
+                 radioButtons("colour","Colour of histogram",choices=c("red","green","blue"),selected="red"),
+                  downloadButton("plotPDF",label="Download")
+      ),
+      
+      # Show a plot of the generated distribution
+      mainPanel(
+         plotOutput("boxplot"),
+         verbatimTextOutput("testResult")
+      )
+   )
+)
+
+server <- function(input, output) {
+   
+  library(breastCancerNKI)
+  
+  data(nki)
+  expression.values <- exprs(nki)
+  features <- fData(nki)
+  er.status <- pData(nki)$er
+  
+  filterByExpression <- function(){
+    gene <- input$thegene
+     probe.id <- as.character(features$probe[match(gene, features$HUGO.gene.symbol)])
+      #Sys.sleep(10)
+     expression.values[probe.id,]
+  }
+  
+    
+   output$boxplot <- renderPlot({
+
+     gene <- input$thegene
+     probe.id <- as.character(features$probe[match(gene, features$HUGO.gene.symbol)])
+     
+     values <- filterByExpression()
+     
+     boxplot(values ~ er.status,col=input$colour)
+   })
+   
+     output$testResult <- renderPrint(
+     {
+     values <- filterByExpression()
+     t.test(values ~ er.status)
+     }
+   )
+  
+        output$plotPDF <- downloadHandler(
+    filename = "boxplot.pdf",   
+    ## filename could also be the result of a function call
+    content = function(file){
+     pdf(file)
+     gene <- input$thegene
+     probe.id <- as.character(features$probe[match(gene, features$HUGO.gene.symbol)])
+     
+     values <- filterByExpression()
+     
+     boxplot(values ~ er.status,col=input$colour)
+     dev.off()
+    }
+      )
+}
+# Run the application 
+shinyApp(ui = ui, server = server)
+```
+
 

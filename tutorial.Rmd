@@ -467,7 +467,7 @@ We can add new outputs by adding new arguments to `mainPanel`. Let's say we want
 
 We now need to modify the server code to create an object `ouput$boxPlot` using the `renderPlot` function. Inside the body of `renderPlot` we write the code to create the boxplot.
 
-However, the following code is incorrect. Can you work out why? `r emo::ji("thinking")`
+However, the following code does not create a working app. Can you work out why? `r emo::ji("thinking")`
 
 ```{r eval=FALSE}
 server <- function(input, output) {

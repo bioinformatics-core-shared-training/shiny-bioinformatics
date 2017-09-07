@@ -1,5 +1,5 @@
 library(shiny)
-
+library(Biobase)
 ui <- fluidPage(
   
   # Application title
@@ -33,7 +33,7 @@ server <- function(input, output) {
   filterByExpression <- function(){
     gene <- input$thegene
     probe.id <- as.character(features$probe[match(gene, features$HUGO.gene.symbol)])
-    Sys.sleep(10)
+    Sys.sleep(5)
     expression.values[probe.id,]
   }
   
