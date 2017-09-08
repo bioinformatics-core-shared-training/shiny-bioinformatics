@@ -421,7 +421,9 @@ Try changing the values for gene name and boxplot colour in this new shiny app. 
 
 For more information on reactive programming, see the [RStudio article](https://shiny.rstudio.com/articles/reactivity-overview.html)
 
-## Actions. e.g. downloading the plot
+## Other features
+
+### Actions. e.g. downloading the plot
 
 There are various options to allow users to [download data](https://shiny.rstudio.com/articles/download.html) from your app. 
 
@@ -547,3 +549,11 @@ server <- function(input, output) {
 # Run the application 
 shinyApp(ui = ui, server = server)
 ```
+
+### Dynamic tables
+
+- A [table widget](http://rstudio.github.io/DT/shiny.html) to allow users to plot any available gene
+    + uses the `DT` library
+    + the table can be sorted, filtered in a familiar manner
+    + `shiny` keeps track of which row has been clicked; which can be accessed via the `input` list
+    + see [cancer-app-4.R](cancer-app-4.R)

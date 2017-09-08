@@ -334,7 +334,7 @@ server &lt;- function(input, output) {
 
 # Run the application 
 shinyApp(ui = ui, server = server)</code></pre>
-<iframe data-deferred-src="app22d13a83af58d844c2de737c6874db4e/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
+<iframe data-deferred-src="appb620beb981bee521233457cf9e64764a/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
 <p>As we have seen previously, we can also add options to allow the user to customise the appearance of the plot</p>
 <pre class="r"><code>library(shiny)
 
@@ -380,7 +380,7 @@ server &lt;- function(input, output) {
 
 # Run the application 
 shinyApp(ui = ui, server = server)</code></pre>
-<iframe data-deferred-src="app95a7403b8f925865dec89e82514f02ed/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
+<iframe data-deferred-src="app979af14446506f897f1b649233cf7b95/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
 <div id="section-exercise" class="section level2">
 <h2>Exercise</h2>
 <ul>
@@ -389,7 +389,7 @@ shinyApp(ui = ui, server = server)</code></pre>
 <li>HINT we suggest using the <code>t.test</code> function</li>
 </ul></li>
 </ul>
-<iframe data-deferred-src="app5a82bbcd216b7fb02ffeb75b48758e95/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
+<iframe data-deferred-src="app7ba03a38f510fcb032a85e7a4e20afd5/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
 </div>
 <div id="section-code-re-use" class="section level2">
 <h2>Code Re-use</h2>
@@ -434,8 +434,10 @@ shinyApp(ui = ui, server = server)</code></pre>
 <p>Try changing the values for gene name and boxplot colour in this new shiny app. You should notice that the plot colour can be changed instantaneously, whereas selecting a different gene triggers the <code>filterByExpression</code> function which includes the sleep statement.</p>
 <p>For more information on reactive programming, see the <a href="https://shiny.rstudio.com/articles/reactivity-overview.html">RStudio article</a></p>
 </div>
-<div id="section-actions.-e.g.downloading-the-plot" class="section level2">
-<h2>Actions. e.g. downloading the plot</h2>
+<div id="section-other-features" class="section level2">
+<h2>Other features</h2>
+<div id="section-actions.-e.g.downloading-the-plot" class="section level3">
+<h3>Actions. e.g. downloading the plot</h3>
 <p>There are various options to allow users to <a href="https://shiny.rstudio.com/articles/download.html">download data</a> from your app.</p>
 <ul>
 <li>create a clickable download button in the <code>UI</code> with <code>downloadButton</code>; specifying what the output object is to be called</li>
@@ -479,7 +481,20 @@ server &lt;- function(input, output) {
 
 
 }    </code></pre>
-<iframe data-deferred-src="app0aea78f09b86d6bb7539cb3e00bc6174/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
+<iframe data-deferred-src="app6a1c5a265d3c4419ac75da77d3c02d4e/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
+</div>
+<div id="section-dynamic-tables" class="section level3">
+<h3>Dynamic tables</h3>
+<ul>
+<li>A <a href="http://rstudio.github.io/DT/shiny.html">table widget</a> to allow users to plot any available gene
+<ul>
+<li>uses the <code>DT</code> library</li>
+<li>the table can be sorted, filtered in a familiar manner</li>
+<li><code>shiny</code> keeps track of which row has been clicked; which can be accessed via the <code>input</code> list</li>
+<li>see <a href="cancer-app-4.R" class="uri">cancer-app-4.R</a></li>
+</ul></li>
+</ul>
+</div>
 </div>
 </div>
 
