@@ -118,7 +118,7 @@ $(document).ready(function () {
 
 <h1 class="title toc-ignore">Shiny Tutorial</h1>
 <h4 class="author"><em>Mark Dunning</em></h4>
-<h4 class="date"><em>Last modified: 07 Sep 2017</em></h4>
+<h4 class="date"><em>Last modified: 08 Sep 2017</em></h4>
 
 </div>
 
@@ -173,7 +173,7 @@ biocLite(&quot;breastCancerNKI&quot;)</code></pre>
 </div>
 <p>Hitting the <strong>Run App</strong> Button will create a new RStudio window this example app. Congratulations, you have just created your first shiny app 🎉</p>
 <p>You could also view in a web browser. <strong><em>Please note that when presented “live” the Shiny app will appear below. On the static HTML pages linked from the course website, there will be grey box below. </em></strong></p>
-<iframe data-deferred-src="appec34504de42adb94f3f5baa33f506879/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
+<iframe data-deferred-src="appc66780138f8473afb7f68bb5a1da0103/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
 <p>In this example app we are creating a histogram of a pre-defined dataset (<code>faithful</code>), with the user being able to specify how many bins to use in the histogram. Let’s first look at the part of the script that defines the interface.</p>
 <pre class="r"><code>ui &lt;- fluidPage(
    
@@ -224,7 +224,7 @@ biocLite(&quot;breastCancerNKI&quot;)</code></pre>
         img(src=&quot;http://www.cruk.cam.ac.uk/sites/all/themes/cambridge_theme/images/interface/main-logo-small.png&quot;)
       ),
       ######</code></pre>
-<iframe data-deferred-src="app78bb87ed436a732fdbced7d80caf1d97/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
+<iframe data-deferred-src="appe46047ea81b2bbfadb6ee29ba76de8ab/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
 </div>
 <div id="section-inputs" class="section level2">
 <h2>Inputs</h2>
@@ -288,7 +288,7 @@ biocLite(&quot;breastCancerNKI&quot;)</code></pre>
       hist(x, breaks = bins, col = input$colour, border = 'white')
    })
 }</code></pre>
-<iframe data-deferred-src="app3a1768733323bc67798c594eabb37128/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
+<iframe data-deferred-src="app72fc1607cc4989830f96ec049db9851f/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
 <p>Note, that the capatilisation of the colours is important in the definition of the <code>radioInput</code>, as <code>red</code>, <code>green</code> and <code>blue</code> are all valid colours in R, whereas <code>Red</code> is not. If you wanted the names of the colours to be displayed nicer in the UI, you can change the <code>Choices</code> vector.</p>
 <pre class="r"><code>        radioButtons(&quot;colour&quot;,&quot;Colour of histogram&quot;,choices=c(&quot;Red&quot;,&quot;Green&quot;,&quot;Blue&quot;),selected=&quot;Red&quot;),</code></pre>
 <p>However, as these are not valid names of colours in R, we need to do some extra processing before we can call the <code>hist</code> function. We can access the value of <code>input$colour</code> and modify accordingly. For example, we could use the <code>tolower</code> function to convert to lower case.</p>
@@ -327,7 +327,7 @@ biocLite(&quot;breastCancerNKI&quot;)</code></pre>
 <li>the RGB value for red is <code>255,0,0</code></li>
 </ul></li>
 </ul>
-<iframe data-deferred-src="appd4d4b6f7d7771a5c1a6b9004c07489aa/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
+<iframe data-deferred-src="appcf0c67e41dfc18dfad2860694a551a29/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
 </div>
 <div id="section-outputs" class="section level2">
 <h2>Outputs</h2>
@@ -360,7 +360,7 @@ biocLite(&quot;breastCancerNKI&quot;)</code></pre>
 
    })
 }</code></pre>
-<iframe data-deferred-src="app22e26eb67622a8f27b46c45c6351abbd/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
+<iframe data-deferred-src="appd739170348fa5d2bed49dc40ed1e8907/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
 <p>Aside from a plot, other types of output include</p>
 <ul>
 <li><code>renderText</code></li>
@@ -376,7 +376,8 @@ biocLite(&quot;breastCancerNKI&quot;)</code></pre>
          verbatimTextOutput(&quot;summary&quot;),
          plotOutput(&quot;boxPlot&quot;)
       )</code></pre>
-<p>In the <code>server</code> function we include the code to compute the relevant outputs. Note that in the first line of the function we define our vector <code>x</code> so that it is visible to all output functions. It probably wouldn’t be an issue with this small example, but for larger datasets we really only want to create the dataset once and be able to access it from all output functions. However, this means that the dataset cannot be modified once the app has started. If we wanted data that can be updated, we would have to use another approach that we will describe in the next section.</p>
+<p>In the <code>server</code> function we include the code to compute the relevant outputs. As part of the <code>server</code> function definition we can also include code to load required packages and datasets. In order to overcome the error observed above we can define the variable <code>x</code> that is used in plotting.</p>
+<pre class="r"><code>x &lt;- faithful[,2]</code></pre>
 <pre class="r"><code>server &lt;- function(input, output) {
      x    &lt;- faithful[, 2] 
          
@@ -406,7 +407,7 @@ biocLite(&quot;breastCancerNKI&quot;)</code></pre>
      
    })
 }</code></pre>
-<iframe data-deferred-src="appa6d98392883f3aa1e92d3c272099d2e3/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
+<iframe data-deferred-src="app7a2b70cda4198de9bc463ae09f192893/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
 <p>The results panel is now getting a bit cluttered. If we wish we could change the layout so each distinct output is displayed in a different panel. This can be done with the <code>tabsetPanel</code> function.</p>
 <pre class="r"><code>      mainPanel(
         tabsetPanel(
@@ -418,7 +419,7 @@ biocLite(&quot;breastCancerNKI&quot;)</code></pre>
         )
 
       )</code></pre>
-<iframe data-deferred-src="app14f33f255fde00a857e7897d4cfc828b/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
+<iframe data-deferred-src="app4052d95f3f8635e0b330bd31e36cca9f/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
 <p>The final code for the app is given below:-</p>
 <pre class="r"><code>library(shiny)
 

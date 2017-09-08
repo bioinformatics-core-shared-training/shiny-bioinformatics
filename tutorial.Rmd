@@ -576,7 +576,14 @@ We will add a numerical summary of our dataset and a message to report the numbe
 
 ```
 
-In the `server` function we include the code to compute the relevant outputs. Note that in the first line of the function we define our vector `x` so that it is visible to all output functions. It probably wouldn't be an issue with this small example, but for larger datasets we really only want to create the dataset once and be able to access it from all output functions. However, this means that the dataset cannot be modified once the app has started. If we wanted data that can be updated, we would have to use another approach that we will describe in the next section.
+In the `server` function we include the code to compute the relevant outputs. As part of the `server` function definition we can also include code to load required packages and datasets. In order to overcome the error observed above we can define the variable `x` that is used in plotting.
+
+```{r}
+x <- faithful[,2]
+```
+
+
+
 
 ```{r eval=FALSE}
 server <- function(input, output) {

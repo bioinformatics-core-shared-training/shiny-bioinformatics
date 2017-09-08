@@ -216,20 +216,20 @@ div.tocify {
 
 <h1 class="title toc-ignore">Shiny for Bioinformatics Tutorial</h1>
 <h4 class="author"><em>Mark Dunning</em></h4>
-<h4 class="date"><em>Last modified: 07 Sep 2017</em></h4>
+<h4 class="date"><em>Last modified: 08 Sep 2017</em></h4>
 
 </div>
 
 
 <div id="section-a-use-case-in-genomics" class="section level1">
 <h1>A use-case in Genomics</h1>
-<p>We are going to develop a simple app to allow a user to perform statistical tests and generate plots from a published dataset. For us, this seems to be quite a common use-case. In the long-run can be a time-saver for the Bioinformatician to encourage the wet-lab Biologists to make their own queries. Assuming that you know how to interrogate and analyse a given gene in R, it is not much more effort to build the interface with Shiny. The advantage being that you can use your existing familiarity with R and not having to learn new languages.</p>
+<p>We are going to develop a simple app to allow a user to perform statistical tests and generate plots from a published dataset. For us, this seems to be quite a common use-case. Assuming that you know how to interrogate and analyse a given gene in R, it is not much more effort to build the interface with Shiny. The advantage being that you can use your existing familiarity with R and not having to learn new languages.</p>
 <p>We will be using the <a href="http://bioconductor.org/packages/release/data/experiment/html/breastCancerNKI.html">breastCancerNKI</a> dataset, which is already available as part of Bioconductor. If you didn’t install this already, you will need to do:-</p>
 <pre class="r"><code>source(&quot;http://www.bioconductor.org/biocLite.R&quot;)
 biocLite(&quot;breastCancerNKI&quot;)</code></pre>
 <p>Briefly, this dataset comprises the gene expression profiling of breast cancer patients. There is extensive clinical data available, but we will be focusing on the ER (Estrogen Receptor) status of each patient. This variable (either positive or negative) is known to predict survival.</p>
 <p>The R code for this app is available as part of the materials for this course <a href="cancer-app.R" class="uri">cancer-app.R</a></p>
-<p>The UI for the app will contain a drop-down where the user can type the name of the gene they wish to interrogate. We will give a limited set of options and a default value of <code>ESR1</code>, which we expect to show a significant difference between the conditions.</p>
+<p>The UI for the app will contain a drop-down where the user can select the name of the gene they wish to interrogate. For this demonstration we will provide a limited set of options and a default value of <code>ESR1</code>, which we expect to show a significant difference between the conditions.</p>
 <pre class="r"><code>ui &lt;- fluidPage(
    
    # Application title
@@ -334,7 +334,7 @@ server &lt;- function(input, output) {
 
 # Run the application 
 shinyApp(ui = ui, server = server)</code></pre>
-<iframe data-deferred-src="app5d74910f5978e59cb1632c9bc11ba1d2/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
+<iframe data-deferred-src="app22d13a83af58d844c2de737c6874db4e/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
 <p>As we have seen previously, we can also add options to allow the user to customise the appearance of the plot</p>
 <pre class="r"><code>library(shiny)
 
@@ -380,7 +380,7 @@ server &lt;- function(input, output) {
 
 # Run the application 
 shinyApp(ui = ui, server = server)</code></pre>
-<iframe data-deferred-src="appcf41e152b260e0efa1c5b249c4d3d798/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
+<iframe data-deferred-src="app95a7403b8f925865dec89e82514f02ed/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
 <div id="section-exercise" class="section level2">
 <h2>Exercise</h2>
 <ul>
@@ -389,7 +389,7 @@ shinyApp(ui = ui, server = server)</code></pre>
 <li>HINT we suggest using the <code>t.test</code> function</li>
 </ul></li>
 </ul>
-<iframe data-deferred-src="app87d28ae83e0157d677e3406905779776/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
+<iframe data-deferred-src="app5a82bbcd216b7fb02ffeb75b48758e95/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
 </div>
 <div id="section-code-re-use" class="section level2">
 <h2>Code Re-use</h2>
@@ -444,6 +444,7 @@ shinyApp(ui = ui, server = server)</code></pre>
 <li>in our case, we use the <code>pdf</code> function to start writing graphics to a temporary file, which then get saved into the specified file name</li>
 <li>the name of the file can be hard-coded, or defined using a function call to get the current date (for example)</li>
 </ul></li>
+<li>similar actions are supported such as a <em>Go!</em> button to execute an analysis</li>
 </ul>
 <pre class="r"><code>   sidebarLayout(
       sidebarPanel(
@@ -478,7 +479,7 @@ server &lt;- function(input, output) {
 
 
 }    </code></pre>
-<iframe data-deferred-src="app93162992ee092b6f4596f9fc6e861ff5/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
+<iframe data-deferred-src="app0aea78f09b86d6bb7539cb3e00bc6174/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
 </div>
 </div>
 
