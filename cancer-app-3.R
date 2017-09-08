@@ -39,9 +39,6 @@ server <- function(input, output) {
   
   output$boxplot <- renderPlot({
     
-    gene <- input$thegene
-    probe.id <- as.character(features$probe[match(gene, features$HUGO.gene.symbol)])
-    
     values <- filterByExpression()
     
     boxplot(values ~ er.status,col=input$colour)
