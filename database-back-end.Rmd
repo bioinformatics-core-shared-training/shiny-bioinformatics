@@ -1,0 +1,204 @@
+---
+title: "Using a Database Back End"
+author: "Matt Eldridge"
+date: '`r format(Sys.time(), "Last modified: %d %b %Y")`'
+output: html_document
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Introduction
+
+In this section we will look at how to work with very large data sets that it would not be feasible to have loaded completely into memory. We will instead store the data in a relational database and retrieve just the data we need to display within the Shiny application.
+
+You will need some of the R packages from the `tidyverse` collection to run this tutorial.
+
+```{r eval = FALSE}
+install.packages("tidyverse")
+```
+
+Following on from the breast cancer expression data example, we will rework that Shiny application such that the large expression data matrix is stored in a SQLite database.
+
+SQLite is a lightweight relational database management system that is very convenient to use when building and testing Shiny applications. If you are using a Mac or Linux machine you're quite likely to already have this installed. Try typing `which sqlite3` at the command line.
+
+We will also be using the tidyverse package `dplyr` to filter and combine expression data and ER status for displaying as a boxplot and the piping mechanism using the `%>%` operator. If you are unfamiliar with these, take a look at the [Data Manipulation and Visualization Using R](http://bioinformatics-core-shared-training.github.io/r-intermediate/) course materials.
+
+One of the most powerful features of `dplyr` is that it can work almost seamlessly with a database back end with minimal changes to code that performs filtering and combining (or join) operations. Other databases supported include MySQL and PostgreSQL.
+
+### When
+
+Consider using a database when
+
+* Working with a very large dataset
+* You only need to process/display a subset of the data at any one time
+
+### Why
+
+* Reduce memory footprint by only loading what is needed
+* Improved responsiveness
+
+
+## Convert the expression data to narrow/tidy format
+
+We first need to convert the NKI expression data from the familiar expresssion matrix format (wide format) to a tidy or narrow format that is more suitable for database queries and more generally for filtering or subsetting operations.
+
+### Wide format
+
+Probe          |  NKI_4 |  NKI_6 |  NKI_7 |  NKI_8 |  NKI_9
+---------------|--------|--------|--------|--------|-------
+Contig45645_RC | -0.215 |  0.071 |  0.182 | -0.343 | -0.134
+Contig44916_RC | -0.207 |  0.055 |  0.077 |  0.302 |  0.051
+D25272         | -0.158 | -0.010 |  0.059 |  0.169 | -0.007
+J00129         | -0.819 | -0.391 | -0.624 | -0.528 | -0.811
+Contig29982_RC | -0.267 | -0.310 | -0.120 | -0.447 | -0.536
+
+### Narrow or tidy format
+
+Probe          | Sample | Expression
+---------------|--------|-----------
+Contig45645_RC | NKI_4  |   -0.215
+Contig44916_RC | NKI_4  |   -0.207
+D25272         | NKI_4  |   -0.158
+J00129         | NKI_4  |   -0.819
+Contig29982_RC | NKI_4  |   -0.267
+Contig45645_RC | NKI_6  |    0.071
+Contig44916_RC | NKI_6  |    0.055
+D25272         | NKI_6  |   -0.010
+J00129         | NKI_6  |   -0.391
+Contig29982_RC | NKI_6  |   -0.310
+
+Note that we'll also be using ggplot2 to create our boxplot and that also requires the data to be in the narrow, or tidy, format.
+
+We'll also create data frames for the probe/gene mapping and sample ER status containing just the information we need for the Shiny application.
+
+```{r convert_to_tidy_format}
+library(breastCancerNKI)
+suppressPackageStartupMessages(library(Biobase))
+suppressPackageStartupMessages(library(tidyverse))
+
+data(nki)
+
+probes <- fData(nki) %>%
+  transmute(Probe = as.character(probe), Gene = as.character(HUGO.gene.symbol))
+
+head(probes)
+
+erStatus <- pData(nki) %>%
+  transmute(Sample = as.character(samplename), ER = factor(er))
+
+head(erStatus)
+
+expressionData <- exprs(nki) %>%
+  as.data.frame %>%
+  rownames_to_column("Probe") %>%
+  gather(Sample, Expression, -Probe) %>%
+  filter(!is.na(Expression))
+
+head(expressionData)
+```
+
+
+## Create a SQLite database and load the data into it
+
+We create a new SQLite database with the `src_sqlite` function. Then we use `copy_to` to create a database table for each of the data frames. Note that we create indexes on each of the columns that we might need to query or use when performing join operations.
+
+```{r create_sqlite_db, eval = TRUE}
+# create a new SQLite3 database
+db <- src_sqlite("nki.sqlite", create = TRUE)
+
+# create tables for each of the erStatus, probes and expressionData data frames
+# with indexes for efficient searches/filtering
+copy_to(db, erStatus, indexes = list("Sample", "ER"), temporary = FALSE, overwrite = TRUE)
+copy_to(db, probes, indexes = list("Probe", "Gene"), temporary = FALSE, overwrite = TRUE)
+copy_to(db, expressionData, indexes = list("Probe", "Sample"), temporary = FALSE, overwrite = TRUE)
+```
+
+
+## Test our database by retrieving data for a gene of interest
+
+First we create the database connection using `src_sqlite` as before. Then we use the `tbl` function to create a `dplyr` table for each of our database tables.
+
+```{r}
+suppressPackageStartupMessages(library(tidyverse))
+
+db <- src_sqlite("nki.sqlite")
+
+probes <- tbl(db, "probes")
+erStatus <- tbl(db, "erStatus")
+expressionData <- tbl(db, "expressionData")
+```
+
+At this point no data have been loaded into memory. We can load the contents of an entire table using `collect`.
+
+```{r}
+head(collect(erStatus))
+```
+
+While this might be appropriate for smaller tables, we do not want to do this for our large expression data table. Instead we would use `collect` to bring the results of a database query, i.e. some subset of the data that we need to access, into memory.
+
+The following shows how to retrieve the expression data and ER status for the PTEN gene.
+
+```{r}
+probes %>%
+  filter(Gene == "PTEN") %>%
+  left_join(expressionData, by = "Probe") %>%
+  left_join(erStatus, by = "Sample") %>%
+  collect %>%
+  tbl_df
+```
+
+The `filter` operation for selecting the probes for the PTEN gene and the `left_join` operations to retrieve the expression data and ER status for each sample are standard `dplyr` operations that produce the same result when applied to the original in-memory data frames.
+
+You can use the `show_query` function to see the SQL query that this being run on the SQLite database.
+
+```{r}
+probes %>%
+  filter(Gene == "PTEN") %>%
+  left_join(expressionData, by = "Probe") %>%
+  left_join(erStatus, by = "Sample") %>%
+  show_query
+```
+
+
+## Update the shiny application
+
+```{r message = FALSE}
+library(shiny)
+library(tidyverse)
+
+db <- src_sqlite("nki.sqlite")
+probes <- tbl(db, "probes")
+erStatus <- tbl(db, "erStatus")
+expressionData <- tbl(db, "expressionData")
+
+ui <- fluidPage(
+  sidebarLayout(
+    sidebarPanel(
+      selectInput("thegene", "Gene to Analyse", choices=c("ESR1", "ERBB2", "PTEN"), selected  = "ESR1")
+    ),
+    mainPanel(
+      plotOutput("boxplot")
+    )
+  )
+)
+
+server <- function(input, output) {
+  output$boxplot <- renderPlot({
+    probes %>%
+      filter(Gene == input$thegene) %>%
+      left_join(expressionData, by = "Probe") %>%
+      left_join(erStatus, by = "Sample") %>%
+      collect %>%
+      ggplot(aes(x = ER, y = Expression, fill = Probe)) +
+      geom_boxplot()
+  })
+}
+
+shinyApp(ui = ui, server = server)
+```
+
+Note that PTEN has two probes. Previously we only showed the expression values for the first matching probe but here we show the data for all probes, taking advantage of our reformatted data and plotting with ggplot2.

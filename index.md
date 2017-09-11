@@ -6,4 +6,4 @@ During this short workshop you will learn about the [Shiny](http://shiny.rstudio
 
 - [Introduction to Shiny](tutorial)
 - [Genomics Use-Case](use-case)
-
+- [Improving efficiency: Adding a database back-end](database-back-end)
