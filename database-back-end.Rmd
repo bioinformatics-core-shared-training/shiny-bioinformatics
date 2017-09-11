@@ -2,7 +2,10 @@
 title: "Using a Database Back End"
 author: "Matt Eldridge"
 date: '`r format(Sys.time(), "Last modified: %d %b %Y")`'
-output: html_document
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
 runtime: shiny
 ---
 
@@ -11,7 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
-## Introduction
+### Introduction
 
 In this section we will look at how to work with very large data sets that it would not be feasible to have loaded completely into memory. We will instead store the data in a relational database and retrieve just the data we need to display within the Shiny application.
 
@@ -29,24 +32,24 @@ We will also be using the tidyverse package `dplyr` to filter and combine expres
 
 One of the most powerful features of `dplyr` is that it can work almost seamlessly with a database back end with minimal changes to code that performs filtering and combining (or join) operations. Other databases supported include MySQL and PostgreSQL.
 
-### When
+#### When
 
 Consider using a database when
 
-* Working with a very large dataset
+* Working with a very large data set
 * You only need to process/display a subset of the data at any one time
 
-### Why
+#### Why
 
 * Reduce memory footprint by only loading what is needed
 * Improved responsiveness
 
 
-## Convert the expression data to narrow/tidy format
+### Convert data to tidy format
 
 We first need to convert the NKI expression data from the familiar expresssion matrix format (wide format) to a tidy or narrow format that is more suitable for database queries and more generally for filtering or subsetting operations.
 
-### Wide format
+#### Wide format
 
 Probe          |  NKI_4 |  NKI_6 |  NKI_7 |  NKI_8 |  NKI_9
 ---------------|--------|--------|--------|--------|-------
@@ -56,7 +59,7 @@ D25272         | -0.158 | -0.010 |  0.059 |  0.169 | -0.007
 J00129         | -0.819 | -0.391 | -0.624 | -0.528 | -0.811
 Contig29982_RC | -0.267 | -0.310 | -0.120 | -0.447 | -0.536
 
-### Narrow or tidy format
+#### Narrow or tidy format
 
 Probe          | Sample | Expression
 ---------------|--------|-----------
@@ -75,7 +78,7 @@ Note that we'll also be using ggplot2 to create our boxplot and that also requir
 
 We'll also create data frames for the probe/gene mapping and sample ER status containing just the information we need for the Shiny application.
 
-```{r convert_to_tidy_format}
+```{r convert_to_tidy_format, eval = FALSE}
 library(breastCancerNKI)
 suppressPackageStartupMessages(library(Biobase))
 suppressPackageStartupMessages(library(tidyverse))
@@ -102,11 +105,11 @@ head(expressionData)
 ```
 
 
-## Create a SQLite database and load the data into it
+### Create a SQLite database
 
-We create a new SQLite database with the `src_sqlite` function. Then we use `copy_to` to create a database table for each of the data frames. Note that we create indexes on each of the columns that we might need to query or use when performing join operations.
+We create a new SQLite database with the `src_sqlite` function. Then we use `copy_to` to create a database table for each of the data frames. Note that we create indexes on each of the columns that we might need to query or use when performing join operations to improve performance.
 
-```{r create_sqlite_db, eval = TRUE}
+```{r create_sqlite_db, eval = FALSE}
 # create a new SQLite3 database
 db <- src_sqlite("nki.sqlite", create = TRUE)
 
@@ -118,7 +121,7 @@ copy_to(db, expressionData, indexes = list("Probe", "Sample"), temporary = FALSE
 ```
 
 
-## Test our database by retrieving data for a gene of interest
+### Test retrieval from the database
 
 First we create the database connection using `src_sqlite` as before. Then we use the `tbl` function to create a `dplyr` table for each of our database tables.
 
@@ -164,7 +167,7 @@ probes %>%
 ```
 
 
-## Update the shiny application
+### Update the shiny application
 
 ```{r message = FALSE}
 library(shiny)
@@ -178,7 +181,7 @@ expressionData <- tbl(db, "expressionData")
 ui <- fluidPage(
   sidebarLayout(
     sidebarPanel(
-      selectInput("thegene", "Gene to Analyse", choices=c("ESR1", "ERBB2", "PTEN"), selected  = "ESR1")
+      selectInput("thegene", "Gene", choices=c("ESR1", "ERBB2", "PTEN"), selected  = "ESR1")
     ),
     mainPanel(
       plotOutput("boxplot")
