@@ -286,6 +286,11 @@ server <- function(input, output) {
 
 ```
 
+In the example the value of `input$colour` is passed directly to the plotting function. This works because `red`, `green`, `blue` are valid colours. We could change the values displayed in the drop-down, but need to make sure they get transformed appropriately. Changing the configuration of the `radioButtons` to the following wouldnt' work.
+
+```{r eval=FALSE}
+        radioButtons("colour","Colour of histogram",choices=c("Coloured Red","Coloured Green","Coloured Blue"),selected="Coloured Red"),
+```
 
 
 ```{r echo=FALSE}
@@ -302,7 +307,7 @@ ui <- fluidPage(
       sidebarPanel(
         h1("Data  Exploration"),
         h2("The histogram"),
-        radioButtons("colour","Colour of histogram",choices=c("red","green","blue"),selected="red"),
+        radioButtons("colour","Colour of histogram",choices=c("Coloured Red","Coloured Green","Coloured Blue"),selected="Coloured Red"),
          sliderInput("bins",
                      "Number of bins:",
                      min = 1,
@@ -347,36 +352,21 @@ shinyApp(ui = ui, server = server)
 Note, that the capatilisation of the colours is important in the definition of the `radioInput`, as `red`, `green` and `blue` are all valid colours in R, whereas `Red` is not. If you wanted the names of the colours to be displayed nicer in the UI, you can change the `Choices` vector.
 
 ```{r eval=FALSE}
-        radioButtons("colour","Colour of histogram",choices=c("Red","Green","Blue"),selected="Red"),
+        radioButtons("colour","Type of histogram",choices=c("Coloured Red","Coloured Green","Coloured Blue"),selected="Red"),
 
 ```
 
-However, as these are not valid names of colours in R, we need to do some extra processing before we can call the `hist` function. We can access the value of `input$colour` and modify accordingly. For example, we could use the `tolower` function to convert to lower case.
-
-```{r eval=FALSE}
-   output$distPlot <- renderPlot({
-      # generate bins based on input$bins from ui.R
-      x    <- faithful[, 2] 
-      bins <- seq(min(x), max(x), length.out = input$bins + 1)
-      
-      # draw the histogram with the specified number of bins
-      mycolour <- tolower(input$colour)
-      
-      hist(x, breaks = bins, col = mycolour, border = 'white')
-   })
-```
-
-Or we could have some kind of control structure
+However, as these are not valid names of colours in R, we need to do some extra processing before we can call the `hist` function. We can access the value of `input$colour` and modify accordingly. For example we could have some kind of control structure
 
 ```{r eval=FALSE}
 
-if(input$color == "Red"){
-  
+if(input$color == "Coloured Red"){
+  col <- "red"
   ....
   
-} else if (input$colour == "Green"){
+} else if (input$colour == "Coloured Green"){
   
-  ....
+  col <- "green"
   
 }
 
