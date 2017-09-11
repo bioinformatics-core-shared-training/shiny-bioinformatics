@@ -148,11 +148,11 @@ differentialExpressionResults &lt;-
 ui &lt;- fluidPage(
   fluidRow(
     column(
-      width = 6,
-      plotOutput(&quot;volcanoPlot&quot;, click = &quot;volcanoPlotSelection&quot;)
+      width = 7,
+      plotOutput(&quot;volcanoPlot&quot;, click = &quot;volcanoPlotSelection&quot;, height = &quot;500px&quot;)
     ),
     column(
-      width = 6,
+      width = 5,
       dataTableOutput(&quot;info&quot;)
     )
   )
@@ -171,16 +171,16 @@ server &lt;- function(input, output) {
   output$info &lt;- renderDataTable(
     nearPoints(differentialExpressionResults, input$volcanoPlotSelection) %&gt;%
       select(Probe, Gene, logFC, adj.P.Val),
-    options = list(pageLength = 5, dom = &quot;tip&quot;, searching = FALSE)
+    options = list(pageLength = 10, dom = &quot;tip&quot;, searching = FALSE)
   )
 }
 
-shinyApp(ui, server)</code></pre>
-<div style="width: 100% ; height: 400px ; text-align: center; box-sizing: border-box; -moz-box-sizing: border-box; -webkit-box-sizing: border-box;" class="muted well">Shiny applications not supported in static R Markdown documents</div>
+shinyApp(ui, server, options = list(height = 500))</code></pre>
+<div style="width: 100% ; height: 500px ; text-align: center; box-sizing: border-box; -moz-box-sizing: border-box; -webkit-box-sizing: border-box;" class="muted well">Shiny applications not supported in static R Markdown documents</div>
 <p>Note that if you are using base graphics the <code>nearPoints</code> function needs to be provided with details of what columns were used for the x- and y-axes; for ggplot2 Shiny was able to infer these and so we didn’t need to specify <code>xvar</code> and <code>yvar</code> arguments.</p>
 <div id="exercise" class="section level4">
 <h4>Exercise</h4>
-<p>Try changing the code above to handle mouse-over (hover) and brush events (brushing involves drawing a box in the plot area) instead of mouse clicks. <em>Hint: see help page for <code>plotOutput</code> function.</em></p>
+<p>Try changing the code above to handle mouse-over (hover) and brush events (brushing involves drawing a box in the plot area) instead of mouse clicks (hint: see help page for <code>plotOutput</code> function).</p>
 </div>
 </div>
 

@@ -41,11 +41,11 @@ differentialExpressionResults <-
 ui <- fluidPage(
   fluidRow(
     column(
-      width = 6,
-      plotOutput("volcanoPlot", click = "volcanoPlotSelection")
+      width = 7,
+      plotOutput("volcanoPlot", click = "volcanoPlotSelection", height = "500px")
     ),
     column(
-      width = 6,
+      width = 5,
       dataTableOutput("info")
     )
   )
@@ -64,17 +64,17 @@ server <- function(input, output) {
   output$info <- renderDataTable(
     nearPoints(differentialExpressionResults, input$volcanoPlotSelection) %>%
       select(Probe, Gene, logFC, adj.P.Val),
-    options = list(pageLength = 5, dom = "tip", searching = FALSE)
+    options = list(pageLength = 10, dom = "tip", searching = FALSE)
   )
 }
 
-shinyApp(ui, server)
+shinyApp(ui, server, options = list(height = 500))
 ```
 
 Note that if you are using base graphics the `nearPoints` function needs to be provided with details of what columns were used for the x- and y-axes; for ggplot2 Shiny was able to infer these and so we didn't need to specify `xvar` and `yvar` arguments.
 
 #### Exercise
 
-Try changing the code above to handle mouse-over (hover) and brush events (brushing involves drawing a box in the plot area) instead of mouse clicks. *Hint: see help page for `plotOutput` function.*
+Try changing the code above to handle mouse-over (hover) and brush events (brushing involves drawing a box in the plot area) instead of mouse clicks (hint: see help page for `plotOutput` function).
 
 
