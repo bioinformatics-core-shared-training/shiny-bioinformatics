@@ -17,7 +17,7 @@ In this section we will look at how to work with very large data sets that it wo
 
 You will need some of the R packages from the `tidyverse` collection to run this tutorial.
 
-```{r eval=FALSE}
+```{r eval = FALSE}
 install.packages("tidyverse")
 ```
 
