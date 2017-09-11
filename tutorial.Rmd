@@ -35,6 +35,7 @@ biocLite("breastCancerNKI")
 - The [New Zealand Tourist Board](https://mbienz.shinyapps.io/tourism_dashboard_prod/) website is built using Shiny
 - [Shiny Cheat Sheet](http://shiny.rstudio.com/images/shiny-cheatsheet.pdf)
       + or from Help menu in RStudio
+      
 ## What is Shiny
 
 - A way to run R code interactively
