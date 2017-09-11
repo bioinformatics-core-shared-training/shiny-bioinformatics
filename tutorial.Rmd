@@ -33,8 +33,7 @@ biocLite("breastCancerNKI")
 - [Shiny articles](https://shiny.rstudio.com/articles/); more advanced use-cases discussed some features that we won't cover in this workshop
 - Videos from the [Shiny developers conference](https://www.rstudio.com/resources/webinars/shiny-developer-conference/)
 - The [New Zealand Tourist Board](https://mbienz.shinyapps.io/tourism_dashboard_prod/) website is built using Shiny
-- [Shiny Cheat Sheet](http://shiny.rstudio.com/images/shiny-cheatsheet.pdf)
-      + or from Help menu in RStudio
+
       
 ## What is Shiny
 
