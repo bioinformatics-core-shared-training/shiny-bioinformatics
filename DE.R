@@ -17,3 +17,7 @@ eb <- eBayes(fit2)
 
 toptable(eb)  
 write.csv(topTable(eb,number = Inf),"NKI-DE-results.csv",row.names=FALSE)
+
+## Code to make a static volcano plot with ggplot2
+library(ggplot2)
+ggplot(topTable(eb,number=Inf),aes(x=logFC,y=B)) + geom_point()
