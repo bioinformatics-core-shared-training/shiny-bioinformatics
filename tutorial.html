@@ -118,7 +118,7 @@ $(document).ready(function () {
 
 <h1 class="title toc-ignore">Shiny Tutorial</h1>
 <h4 class="author"><em>Mark Dunning</em></h4>
-<h4 class="date"><em>Last modified: 08 Sep 2017</em></h4>
+<h4 class="date"><em>Last modified: 11 Sep 2017</em></h4>
 
 </div>
 
@@ -141,11 +141,11 @@ biocLite(&quot;breastCancerNKI&quot;)</code></pre>
 <li>A <a href="http://shiny.rstudio.com/articles/cheatsheet.html">Shiny cheatsheet</a> to print off and pin to your desk</li>
 <li><a href="https://shiny.rstudio.com/articles/">Shiny articles</a>; more advanced use-cases discussed some features that we won’t cover in this workshop</li>
 <li>Videos from the <a href="https://www.rstudio.com/resources/webinars/shiny-developer-conference/">Shiny developers conference</a></li>
-</ul>
-</div>
-<div id="section-what-is-shiny" class="section level2">
-<h2>What is Shiny</h2>
+<li>The <a href="https://mbienz.shinyapps.io/tourism_dashboard_prod/">New Zealand Tourist Board</a> website is built using Shiny</li>
+<li><a href="http://shiny.rstudio.com/images/shiny-cheatsheet.pdf">Shiny Cheat Sheet</a>
 <ul>
+<li>or from Help menu in RStudio ## What is Shiny</li>
+</ul></li>
 <li>A way to run R code interactively</li>
 <li>A great way of letting others access your data without requiring Bioinformatics skills</li>
 <li>A way of building web portals without requiring javascript or other technologies</li>
@@ -173,7 +173,8 @@ biocLite(&quot;breastCancerNKI&quot;)</code></pre>
 </div>
 <p>Hitting the <strong>Run App</strong> Button will create a new RStudio window this example app. Congratulations, you have just created your first shiny app 🎉</p>
 <p>You could also view in a web browser. <strong><em>Please note that when presented “live” the Shiny app will appear below. On the static HTML pages linked from the course website, there will be grey box below. </em></strong></p>
-<iframe data-deferred-src="appc66780138f8473afb7f68bb5a1da0103/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
+<pre><code>## Warning: package 'shiny' was built under R version 3.4.1</code></pre>
+<iframe data-deferred-src="app892083b9186737cf3cffe00ed7b11539/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
 <p>In this example app we are creating a histogram of a pre-defined dataset (<code>faithful</code>), with the user being able to specify how many bins to use in the histogram. Let’s first look at the part of the script that defines the interface.</p>
 <pre class="r"><code>ui &lt;- fluidPage(
    
@@ -224,7 +225,7 @@ biocLite(&quot;breastCancerNKI&quot;)</code></pre>
         img(src=&quot;http://www.cruk.cam.ac.uk/sites/all/themes/cambridge_theme/images/interface/main-logo-small.png&quot;)
       ),
       ######</code></pre>
-<iframe data-deferred-src="appe46047ea81b2bbfadb6ee29ba76de8ab/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
+<iframe data-deferred-src="app298bd7bee84d4835694a17340b778fbd/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
 </div>
 <div id="section-inputs" class="section level2">
 <h2>Inputs</h2>
@@ -288,7 +289,7 @@ biocLite(&quot;breastCancerNKI&quot;)</code></pre>
       hist(x, breaks = bins, col = input$colour, border = 'white')
    })
 }</code></pre>
-<iframe data-deferred-src="app72fc1607cc4989830f96ec049db9851f/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
+<iframe data-deferred-src="appebec6abd78d34c5bb5cfbb5696b4dbd8/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
 <p>Note, that the capatilisation of the colours is important in the definition of the <code>radioInput</code>, as <code>red</code>, <code>green</code> and <code>blue</code> are all valid colours in R, whereas <code>Red</code> is not. If you wanted the names of the colours to be displayed nicer in the UI, you can change the <code>Choices</code> vector.</p>
 <pre class="r"><code>        radioButtons(&quot;colour&quot;,&quot;Colour of histogram&quot;,choices=c(&quot;Red&quot;,&quot;Green&quot;,&quot;Blue&quot;),selected=&quot;Red&quot;),</code></pre>
 <p>However, as these are not valid names of colours in R, we need to do some extra processing before we can call the <code>hist</code> function. We can access the value of <code>input$colour</code> and modify accordingly. For example, we could use the <code>tolower</code> function to convert to lower case.</p>
@@ -327,7 +328,7 @@ biocLite(&quot;breastCancerNKI&quot;)</code></pre>
 <li>the RGB value for red is <code>255,0,0</code></li>
 </ul></li>
 </ul>
-<iframe data-deferred-src="appcf0c67e41dfc18dfad2860694a551a29/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
+<iframe data-deferred-src="app6d299938da567d342b16df009d83e2ed/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
 </div>
 <div id="section-outputs" class="section level2">
 <h2>Outputs</h2>
@@ -360,7 +361,7 @@ biocLite(&quot;breastCancerNKI&quot;)</code></pre>
 
    })
 }</code></pre>
-<iframe data-deferred-src="appd739170348fa5d2bed49dc40ed1e8907/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
+<iframe data-deferred-src="app18a75498327a2668629ad6b8ae2d6cc7/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
 <p>Aside from a plot, other types of output include</p>
 <ul>
 <li><code>renderText</code></li>
@@ -407,7 +408,7 @@ biocLite(&quot;breastCancerNKI&quot;)</code></pre>
      
    })
 }</code></pre>
-<iframe data-deferred-src="app7a2b70cda4198de9bc463ae09f192893/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
+<iframe data-deferred-src="app33678455ae2a734285c9718462d166a8/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
 <p>The results panel is now getting a bit cluttered. If we wish we could change the layout so each distinct output is displayed in a different panel. This can be done with the <code>tabsetPanel</code> function.</p>
 <pre class="r"><code>      mainPanel(
         tabsetPanel(
@@ -419,7 +420,7 @@ biocLite(&quot;breastCancerNKI&quot;)</code></pre>
         )
 
       )</code></pre>
-<iframe data-deferred-src="app4052d95f3f8635e0b330bd31e36cca9f/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
+<iframe data-deferred-src="app22aaf4f7bba350d5fe928446a6d25a80/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
 <p>The final code for the app is given below:-</p>
 <pre class="r"><code>library(shiny)
 
