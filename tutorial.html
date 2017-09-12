@@ -118,7 +118,7 @@ $(document).ready(function () {
 
 <h1 class="title toc-ignore">Shiny Tutorial</h1>
 <h4 class="author"><em>Mark Dunning</em></h4>
-<h4 class="date"><em>Last modified: 11 Sep 2017</em></h4>
+<h4 class="date"><em>Last modified: 12 Sep 2017</em></h4>
 
 </div>
 
@@ -129,6 +129,8 @@ $(document).ready(function () {
 <h2>R packages</h2>
 <p>You will need the following R packages to run this tutorial</p>
 <pre class="r"><code>install.packages(&quot;shiny&quot;)
+install.packages(&quot;tidyverse&quot;)
+install.packages(&quot;plotly&quot;)
 source(&quot;http://www.bioconductor.org/biocLite.R&quot;)
 biocLite(&quot;breastCancerNKI&quot;)</code></pre>
 </div>
@@ -174,7 +176,7 @@ biocLite(&quot;breastCancerNKI&quot;)</code></pre>
 </div>
 <p>Hitting the <strong>Run App</strong> Button will create a new RStudio window this example app. Congratulations, you have just created your first shiny app 🎉</p>
 <p>You could also view in a web browser. <strong><em>Please note that when presented “live” the Shiny app will appear below. On the static HTML pages linked from the course website, there will be grey box below. </em></strong></p>
-<iframe data-deferred-src="appcef1cce51367842db33f5e74a81f6751/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
+<iframe data-deferred-src="appe9abdc87f310e7ef6ed5497e615c7b92/?w=&amp;__subapp__=1" width="100%" height="520" class="shiny-frame shiny-frame-deferred"></iframe>
 <p>In this example app we are creating a histogram of a pre-defined dataset (<code>faithful</code>), with the user being able to specify how many bins to use in the histogram. Let’s first look at the part of the script that defines the interface.</p>
 <pre class="r"><code>ui &lt;- fluidPage(
    
@@ -202,7 +204,7 @@ biocLite(&quot;breastCancerNKI&quot;)</code></pre>
 <li>There are two panels in the app layout; defined by the <code>sidebarPanel</code> and <code>mainPanel</code> arguments respectively</li>
 <li>A slider bar is used to choose a different value of <code>bins</code>, and this value can be accessed as <code>input$bins</code> from within in the <code>server</code> function (see later).<br />
 </li>
-<li>A plot is displayed in the main panel</li>
+<li>A plot is displayed in the main panel, which we have chosen to call <code>distPlot</code>.</li>
 </ul>
 <div id="section-html-and-other-formatting" class="section level2">
 <h2>HTML and other formatting</h2>
@@ -225,7 +227,7 @@ biocLite(&quot;breastCancerNKI&quot;)</code></pre>
         img(src=&quot;http://www.cruk.cam.ac.uk/sites/all/themes/cambridge_theme/images/interface/main-logo-small.png&quot;)
       ),
       ######</code></pre>
-<iframe data-deferred-src="app83b6efb09cf2a6aee23349d63a709ab4/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
+<iframe data-deferred-src="app903e747d6e92b7b9a2b1736ca03bd6c3/?w=&amp;__subapp__=1" width="100%" height="520" class="shiny-frame shiny-frame-deferred"></iframe>
 </div>
 <div id="section-inputs" class="section level2">
 <h2>Inputs</h2>
@@ -276,7 +278,25 @@ biocLite(&quot;breastCancerNKI&quot;)</code></pre>
         img(src=&quot;http://www.cruk.cam.ac.uk/sites/all/themes/cambridge_theme/images/interface/main-logo-small.png&quot;)
       ),
       ######</code></pre>
-<p>To actually access the value that has been selected, we need to modify the code in the <code>server</code> section of our <code>app.R</code> script. On the line that creates the histogram we merely change the <code>col</code> argument from the original <code>darkgray</code> to <code>input$colour</code>.</p>
+<p>To actually access the value that has been selected, we need to modify the code in the <code>server</code> section of our <code>app.R</code> script. This part of the script defines how each of the outputs that appear in the main panel are generated.</p>
+<p>In this example, we just have a histogram of the <code>faithful</code> dataset. In the UI part of the script we have defined a plot called <code>distPlot</code>.</p>
+<pre class="r"><code>      mainPanel(
+         plotOutput(&quot;distPlot&quot;)
+      )</code></pre>
+<p>The server script must specify how <code>distPlot</code> is created and assign it to the list of outputs. The code tells us how the <code>bins</code> parameter that is changed by the slider is used in the generation of the histogram.</p>
+<p>We use “base” graphics to plot the histogram, but <code>shiny</code> is equally happy to use <code>ggplot2</code>, <code>lattice</code>, or whatever your favourite way of plotting is. The plot itself is static, but you can incorporate <em>interactive</em> graphs as we will see later.</p>
+<pre class="r"><code>server &lt;- function(input, output) {
+   
+   output$distPlot &lt;- renderPlot({
+      # generate bins based on input$bins from ui.R
+      x    &lt;- faithful[, 2] 
+      bins &lt;- seq(min(x), max(x), length.out = input$bins + 1)
+      
+      # draw the histogram with the specified number of bins
+      hist(x, breaks = bins, col = 'darkgray', border = 'white')
+   })
+}</code></pre>
+<p>To modify the colour according to what the user has selected, we change the <code>col</code> argument in the <code>hist</code> function from the original <code>darkgray</code> to <code>input$colour</code>.</p>
 <pre class="r"><code>server &lt;- function(input, output) {
    
    output$distPlot &lt;- renderPlot({
@@ -289,20 +309,30 @@ biocLite(&quot;breastCancerNKI&quot;)</code></pre>
       hist(x, breaks = bins, col = input$colour, border = 'white')
    })
 }</code></pre>
-<p>In the example the value of <code>input$colour</code> is passed directly to the plotting function. This works because <code>red</code>, <code>green</code>, <code>blue</code> are valid colours. We could change the values displayed in the drop-down, but need to make sure they get transformed appropriately. Changing the configuration of the <code>radioButtons</code> to the following wouldnt’ work.</p>
-<pre class="r"><code>        radioButtons(&quot;colour&quot;,&quot;Colour of histogram&quot;,choices=c(&quot;Coloured Red&quot;,&quot;Coloured Green&quot;,&quot;Coloured Blue&quot;),selected=&quot;Coloured Red&quot;),</code></pre>
-<iframe data-deferred-src="app33ce7a746aac6d51105ba23c59a9e074/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
-<p>Note, that the capatilisation of the colours is important in the definition of the <code>radioInput</code>, as <code>red</code>, <code>green</code> and <code>blue</code> are all valid colours in R, whereas <code>Red</code> is not. If you wanted the names of the colours to be displayed nicer in the UI, you can change the <code>Choices</code> vector.</p>
-<pre class="r"><code>        radioButtons(&quot;colour&quot;,&quot;Type of histogram&quot;,choices=c(&quot;Coloured Red&quot;,&quot;Coloured Green&quot;,&quot;Coloured Blue&quot;),selected=&quot;Red&quot;),</code></pre>
-<p>However, as these are not valid names of colours in R, we need to do some extra processing before we can call the <code>hist</code> function. We can access the value of <code>input$colour</code> and modify accordingly. For example we could have some kind of control structure</p>
-<pre class="r"><code>if(input$color == &quot;Coloured Red&quot;){
-  col &lt;- &quot;red&quot;
-  ....
+<p>In this example the value of <code>input$colour</code> is passed directly to the plotting function. This works because <code>red</code>, <code>green</code>, <code>blue</code> are valid colours. We could change the values displayed in the drop-down, but need to make sure they get transformed appropriately. Changing the configuration of the <code>radioButtons</code> to the following wouldn’t work.</p>
+<pre class="r"><code>        radioButtons(&quot;colour&quot;,&quot;Histogram Colour&quot;,choices=c(&quot;I want Red&quot;,&quot;I want Green&quot;,&quot;I want Blue&quot;),selected=&quot;I want Red&quot;),</code></pre>
+<iframe data-deferred-src="app0344759b185352306185102bd9d7e508/?w=&amp;__subapp__=1" width="100%" height="520" class="shiny-frame shiny-frame-deferred"></iframe>
+<p>However, we can access the value of <code>input$colour</code> and create a new variable accordingly. For example we could have some kind of control structure</p>
+<pre class="r"><code>server &lt;- function(input, output) {
+   
+   output$distPlot &lt;- renderPlot({
+      # generate bins based on input$bins from ui.R
+      x    &lt;- faithful[, 2] 
+      bins &lt;- seq(min(x), max(x), length.out = input$bins + 1)
+      
+        if(input$colour == &quot;I want Red&quot;){
+          mycol &lt;- &quot;red&quot;
+        } else if (input$colour == &quot;I want Green&quot;){
+          mycol &lt;- &quot;green&quot;
   
-} else if (input$colour == &quot;Coloured Green&quot;){
-  
-  col &lt;- &quot;green&quot;
-  
+        } else mycol &lt;- &quot;blue&quot;
+ 
+      # draw the histogram with the specified number of bins
+
+      
+      hist(x, breaks = bins, col = mycol, border = 'white')
+   })
+   
 }</code></pre>
 </div>
 <div id="section-exercises" class="section level2">
@@ -319,7 +349,7 @@ biocLite(&quot;breastCancerNKI&quot;)</code></pre>
 <li>the RGB value for red is <code>255,0,0</code></li>
 </ul></li>
 </ul>
-<iframe data-deferred-src="app2812db0229d2ebac8c837434341844ae/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
+<iframe data-deferred-src="app0e233a5ce9698081d2271db44b86bbe2/?w=&amp;__subapp__=1" width="100%" height="520" class="shiny-frame shiny-frame-deferred"></iframe>
 </div>
 <div id="section-outputs" class="section level2">
 <h2>Outputs</h2>
@@ -332,7 +362,7 @@ biocLite(&quot;breastCancerNKI&quot;)</code></pre>
    )
 )</code></pre>
 <p>We now need to modify the server code to create an object <code>ouput$boxPlot</code> using the <code>renderPlot</code> function. Inside the body of <code>renderPlot</code> we write the code to create the boxplot.</p>
-<p>However, the following code does not create a working app. Can you work out why? 🤔</p>
+<p>However, the following <code>server</code> code does not create a working app. Can you work out why? 🤔</p>
 <pre class="r"><code>server &lt;- function(input, output) {
    
    output$distPlot &lt;- renderPlot({
@@ -352,7 +382,7 @@ biocLite(&quot;breastCancerNKI&quot;)</code></pre>
 
    })
 }</code></pre>
-<iframe data-deferred-src="appb15ad0e3757d95d2469fcb9725ac18eb/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
+<iframe data-deferred-src="appfea2cb0c49d1dc4fc8295aa3c500d425/?w=&amp;__subapp__=1" width="100%" height="520" class="shiny-frame shiny-frame-deferred"></iframe>
 <p>Aside from a plot, other types of output include</p>
 <ul>
 <li><code>renderText</code></li>
@@ -363,7 +393,6 @@ biocLite(&quot;breastCancerNKI&quot;)</code></pre>
 <p>We will add a numerical summary of our dataset and a message to report the number of bins that were selected. These elements can be added to the <code>mainPanel</code> using <code>verbatimTextOutput</code> and <code>textOutput</code> respectively:-</p>
 <pre class="r"><code>      # Show a plot of the generated distribution
       mainPanel(
-         textOutput(&quot;chosenBins&quot;),
          plotOutput(&quot;distPlot&quot;),
          verbatimTextOutput(&quot;summary&quot;),
          plotOutput(&quot;boxPlot&quot;)
@@ -393,25 +422,21 @@ biocLite(&quot;breastCancerNKI&quot;)</code></pre>
      summary(x)
    })
    
-   output$chosenBins &lt;- renderText({
-     
-     paste(&quot;Number of bins to draw histogram&quot;, input$bins)
-     
-   })
+
 }</code></pre>
-<iframe data-deferred-src="appfeba5fa0c1c40aebc64ccc232fe5d062/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
-<p>The results panel is now getting a bit cluttered. If we wish we could change the layout so each distinct output is displayed in a different panel. This can be done with the <code>tabsetPanel</code> function.</p>
+<iframe data-deferred-src="app44e0efcae3829a258c3320a0228a1576/?w=&amp;__subapp__=1" width="100%" height="800" class="shiny-frame shiny-frame-deferred"></iframe>
+<p>The results panel is now getting a bit cluttered. If we wish we could change the layout so each distinct output is displayed in a different panel. This can be done with the <code>tabsetPanel</code> function. We can also include a tab to inspect the raw data with a <em>data table</em></p>
 <pre class="r"><code>      mainPanel(
         tabsetPanel(
-          tabPanel(&quot;Bins&quot;, textOutput(&quot;chosenBins&quot;)),
-          tabPanel(&quot;Histogram&quot;,plotOutput(&quot;distPlot&quot;)),
+          tabPanel(&quot;Data&quot;, dataTableOutput(&quot;data&quot;)),
           tabPanel(&quot;Summary&quot;, verbatimTextOutput(&quot;summary&quot;)),
+          tabPanel(&quot;Histogram&quot;,plotOutput(&quot;distPlot&quot;)),
           tabPanel(&quot;Boxplot&quot;, plotOutput(&quot;boxPlot&quot;))
           
         )
 
       )</code></pre>
-<iframe data-deferred-src="app4e1b53e9675b284b39d7cd903caa2a17/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe>
+<iframe data-deferred-src="app6c5c6bd17ff27d26bdd0d4bc85fad150/?w=&amp;__subapp__=1" width="100%" height="520" class="shiny-frame shiny-frame-deferred"></iframe>
 <p>The final code for the app is given below:-</p>
 <pre class="r"><code>library(shiny)
 
@@ -424,25 +449,19 @@ ui &lt;- fluidPage(
    # Sidebar with a slider input for number of bins 
    sidebarLayout(
       sidebarPanel(
-        h1(&quot;Data  Exploration&quot;),
-        h2(&quot;The histogram&quot;),
+
         radioButtons(&quot;colour&quot;,&quot;Colour of histogram&quot;,choices=c(&quot;red&quot;,&quot;green&quot;,&quot;blue&quot;),selected=&quot;red&quot;),
          sliderInput(&quot;bins&quot;,
                      &quot;Number of bins:&quot;,
                      min = 1,
                      max = 50,
-                     value = 30),
-        helpText(&quot;This slider defines the number of bins to divided the data into&quot;),
-        a(&quot;More about the histogram here&quot;, href=&quot;https://en.wikipedia.org/wiki/Histogram&quot;),
-        br(),
-        p(&quot;App developed by University of Cambridge&quot;),
-        img(src=&quot;http://www.cruk.cam.ac.uk/sites/all/themes/cambridge_theme/images/interface/main-logo-small.png&quot;)
+                     value = 30)
       ),
       
       # Show a plot of the generated distribution
       mainPanel(
         tabsetPanel(
-          tabPanel(&quot;Bins&quot;, textOutput(&quot;chosenBins&quot;)),
+          tabPanel(&quot;Data&quot;, dataTableOutput(&quot;data&quot;)),
           tabPanel(&quot;Histogram&quot;,plotOutput(&quot;distPlot&quot;)),
           tabPanel(&quot;Summary&quot;, verbatimTextOutput(&quot;summary&quot;)),
           tabPanel(&quot;Boxplot&quot;, plotOutput(&quot;boxPlot&quot;))
@@ -476,12 +495,8 @@ server &lt;- function(input, output) {
      
    })
    
-      output$chosenBins &lt;- renderText({
-     
-     paste(&quot;Number of bins to draw histogram&quot;, input$bins)
-     
-   })
-   
+
+   output$data &lt;- renderDataTable(faithful)
 }
 
 # Run the application 

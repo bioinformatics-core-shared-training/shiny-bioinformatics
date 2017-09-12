@@ -19,6 +19,8 @@ devtools::install_github("hadley/emo")
 You will need the following R packages to run this tutorial
 ```{r eval=FALSE}
 install.packages("shiny")
+install.packages("tidyverse")
+install.packages("plotly")
 source("http://www.bioconductor.org/biocLite.R")
 biocLite("breastCancerNKI")
 
@@ -104,7 +106,7 @@ server <- function(input, output) {
 }
 
 # Run the application 
-shinyApp(ui = ui, server = server)
+shinyApp(ui = ui, server = server, options = list(height = 520))
 
 
 ```
@@ -141,7 +143,7 @@ ui <- fluidPage(
 - The layout of the app is using the sidebar style. 
 - There are two panels in the app layout; defined by the `sidebarPanel` and `mainPanel` arguments respectively
 - A slider bar is used to choose a different value of `bins`, and this value can be accessed as `input$bins` from within in the `server` function (see later).  
-- A plot is displayed in the main panel
+- A plot is displayed in the main panel, which we have chosen to call `distPlot`.
 
 ## HTML and other formatting
 
@@ -217,7 +219,7 @@ server <- function(input, output) {
 }
 
 # Run the application 
-shinyApp(ui = ui, server = server)
+shinyApp(ui = ui, server = server, options = list(height = 520))
 
 ```
 
@@ -265,9 +267,36 @@ To add an extra input option, we need to add it as an argument to the `sidebarPa
       ######
 ```
 
-To actually access the value that has been selected, we need to modify the code in the `server` section of our `app.R` script. On the line that creates the histogram we merely change the `col` argument from the original `darkgray` to `input$colour`.
+To actually access the value that has been selected, we need to modify the code in the `server` section of our `app.R` script. This part of the script defines how each of the outputs that appear in the main panel are generated.
+
+In this example, we just have a histogram of the `faithful` dataset. In the UI part of the script we have defined a plot called `distPlot`.
+
+```{r eval=FALSE}
+      mainPanel(
+         plotOutput("distPlot")
+      )
+```
+
+The server script must specify how `distPlot` is created and assign it to the list of outputs. The code tells us how the `bins` parameter that is changed by the slider is used in the generation of the histogram.
+
+We use "base" graphics to plot the histogram, but `shiny` is equally happy to use `ggplot2`, `lattice`, or whatever your favourite way of plotting is. The plot itself is static, but you can incorporate *interactive* graphs as we will see later.
+
+```{r eval=FALSE}
+server <- function(input, output) {
+   
+   output$distPlot <- renderPlot({
+      # generate bins based on input$bins from ui.R
+      x    <- faithful[, 2] 
+      bins <- seq(min(x), max(x), length.out = input$bins + 1)
+      
+      # draw the histogram with the specified number of bins
+      hist(x, breaks = bins, col = 'darkgray', border = 'white')
+   })
+}
+```
 
 
+To modify the colour according to what the user has selected, we change the `col` argument in the `hist` function from the original `darkgray` to `input$colour`.
 
 ```{r eval=FALSE}
 server <- function(input, output) {
@@ -285,10 +314,10 @@ server <- function(input, output) {
 
 ```
 
-In the example the value of `input$colour` is passed directly to the plotting function. This works because `red`, `green`, `blue` are valid colours. We could change the values displayed in the drop-down, but need to make sure they get transformed appropriately. Changing the configuration of the `radioButtons` to the following wouldnt' work.
+In this example the value of `input$colour` is passed directly to the plotting function. This works because `red`, `green`, `blue` are valid colours. We could change the values displayed in the drop-down, but need to make sure they get transformed appropriately. Changing the configuration of the `radioButtons` to the following wouldn't work.
 
 ```{r eval=FALSE}
-        radioButtons("colour","Colour of histogram",choices=c("Coloured Red","Coloured Green","Coloured Blue"),selected="Coloured Red"),
+        radioButtons("colour","Histogram Colour",choices=c("I want Red","I want Green","I want Blue"),selected="I want Red"),
 ```
 
 
@@ -306,7 +335,7 @@ ui <- fluidPage(
       sidebarPanel(
         h1("Data  Exploration"),
         h2("The histogram"),
-        radioButtons("colour","Colour of histogram",choices=c("Coloured Red","Coloured Green","Coloured Blue"),selected="Coloured Red"),
+        radioButtons("colour","Histogram Colour",choices=c("I want Red","I want Green","I want Blue"),selected="I want Red"),
          sliderInput("bins",
                      "Number of bins:",
                      min = 1,
@@ -343,33 +372,38 @@ server <- function(input, output) {
 }
 
 # Run the application 
-shinyApp(ui = ui, server = server)
+shinyApp(ui = ui, server = server, options = list(height = 520))
 
 ```
 
 
-Note, that the capatilisation of the colours is important in the definition of the `radioInput`, as `red`, `green` and `blue` are all valid colours in R, whereas `Red` is not. If you wanted the names of the colours to be displayed nicer in the UI, you can change the `Choices` vector.
-
-```{r eval=FALSE}
-        radioButtons("colour","Type of histogram",choices=c("Coloured Red","Coloured Green","Coloured Blue"),selected="Red"),
-
-```
-
-However, as these are not valid names of colours in R, we need to do some extra processing before we can call the `hist` function. We can access the value of `input$colour` and modify accordingly. For example we could have some kind of control structure
+However, we can access the value of `input$colour` and create a new variable accordingly. For example we could have some kind of control structure
 
 ```{r eval=FALSE}
 
-if(input$color == "Coloured Red"){
-  col <- "red"
-  ....
+
+
+server <- function(input, output) {
+   
+   output$distPlot <- renderPlot({
+      # generate bins based on input$bins from ui.R
+      x    <- faithful[, 2] 
+      bins <- seq(min(x), max(x), length.out = input$bins + 1)
+      
+        if(input$colour == "I want Red"){
+          mycol <- "red"
+        } else if (input$colour == "I want Green"){
+          mycol <- "green"
   
-} else if (input$colour == "Coloured Green"){
-  
-  col <- "green"
-  
+        } else mycol <- "blue"
+ 
+      # draw the histogram with the specified number of bins
+
+      
+      hist(x, breaks = bins, col = mycol, border = 'white')
+   })
+   
 }
-
-
 
 ```
 
@@ -398,15 +432,12 @@ ui <- fluidPage(
    # Sidebar with a slider input for number of bins 
    sidebarLayout(
       sidebarPanel(
-        h1("Data  Exploration"),
-        h2("The histogram"),
         selectInput(inputId = "colour","Colour of histogram",choices=colours(),selected="red"),
          sliderInput("bins",
                      "Number of bins:",
                      min = 1,
                      max = 50,
                      value = 30),
-        helpText("This slider defines the number of bins to divided the data into"),
         textInput(inputId = "title",label="Histogram Title",value = "Histogram of x")
       ),
       
@@ -434,7 +465,7 @@ server <- function(input, output) {
 }
 
 # Run the application 
-shinyApp(ui = ui, server = server)
+shinyApp(ui = ui, server = server, options = list(height = 520))
 
 ```
 
@@ -459,7 +490,7 @@ We can add new outputs by adding new arguments to `mainPanel`. Let's say we want
 
 We now need to modify the server code to create an object `ouput$boxPlot` using the `renderPlot` function. Inside the body of `renderPlot` we write the code to create the boxplot.
 
-However, the following code does not create a working app. Can you work out why? `r emo::ji("thinking")`
+However, the following `server` code does not create a working app. Can you work out why? `r emo::ji("thinking")`
 
 ```{r eval=FALSE}
 server <- function(input, output) {
@@ -483,6 +514,8 @@ server <- function(input, output) {
 }
 ```
 
+
+
 ```{r echo=FALSE}
 library(shiny)
 
@@ -495,19 +528,12 @@ ui <- fluidPage(
    # Sidebar with a slider input for number of bins 
    sidebarLayout(
       sidebarPanel(
-        h1("Data  Exploration"),
-        h2("The histogram"),
         radioButtons("colour","Colour of histogram",choices=c("red","green","blue"),selected="red"),
          sliderInput("bins",
                      "Number of bins:",
                      min = 1,
                      max = 50,
-                     value = 30),
-        helpText("This slider defines the number of bins to divided the data into"),
-        a("More about the histogram here", href="https://en.wikipedia.org/wiki/Histogram"),
-        br(),
-        p("App developed by University of Cambridge"),
-        img(src="http://www.cruk.cam.ac.uk/sites/all/themes/cambridge_theme/images/interface/main-logo-small.png")
+                     value = 30)
       ),
       
       # Show a plot of the generated distribution
@@ -531,16 +557,16 @@ server <- function(input, output) {
       
       hist(x, breaks = bins, col = input$colour, border = 'white',main=input$title)
    })
-
    
    output$boxPlot <- renderPlot({
-      boxplot(x,horizontal = TRUE,col=input$colour)
-     
+
+       boxplot(x,horizontal=TRUE,col=input$colour)
+
    })
 }
 
 # Run the application 
-shinyApp(ui = ui, server = server)
+shinyApp(ui = ui, server = server, options = list(height = 520))
 
 ```
 
@@ -559,7 +585,6 @@ We will add a numerical summary of our dataset and a message to report the numbe
 
       # Show a plot of the generated distribution
       mainPanel(
-         textOutput("chosenBins"),
          plotOutput("distPlot"),
          verbatimTextOutput("summary"),
          plotOutput("boxPlot")
@@ -570,7 +595,7 @@ We will add a numerical summary of our dataset and a message to report the numbe
 
 In the `server` function we include the code to compute the relevant outputs. As part of the `server` function definition we can also include code to load required packages and datasets. In order to overcome the error observed above we can define the variable `x` that is used in plotting.
 
-```{r}
+```{r eval=FALSE}
 x <- faithful[,2]
 ```
 
@@ -601,11 +626,7 @@ server <- function(input, output) {
      summary(x)
    })
    
-   output$chosenBins <- renderText({
-     
-     paste("Number of bins to draw histogram", input$bins)
-     
-   })
+
 }
 ```
 
@@ -623,24 +644,16 @@ ui <- fluidPage(
    # Sidebar with a slider input for number of bins 
    sidebarLayout(
       sidebarPanel(
-        h1("Data  Exploration"),
-        h2("The histogram"),
         radioButtons("colour","Colour of histogram",choices=c("red","green","blue"),selected="red"),
          sliderInput("bins",
                      "Number of bins:",
                      min = 1,
                      max = 50,
-                     value = 30),
-        helpText("This slider defines the number of bins to divided the data into"),
-        a("More about the histogram here", href="https://en.wikipedia.org/wiki/Histogram"),
-        br(),
-        p("App developed by University of Cambridge"),
-        img(src="http://www.cruk.cam.ac.uk/sites/all/themes/cambridge_theme/images/interface/main-logo-small.png")
+                     value = 30)
       ),
       
       # Show a plot of the generated distribution
       mainPanel(
-         textOutput("chosenBins"),
          plotOutput("distPlot"),
          verbatimTextOutput("summary"),
          plotOutput("boxPlot")
@@ -679,18 +692,18 @@ server <- function(input, output) {
 }
 
 # Run the application 
-shinyApp(ui = ui, server = server)
+shinyApp(ui = ui, server = server, options = list(height = 800))
 ```
 
 
-The results panel is now getting a bit cluttered. If we wish we could change the layout so each distinct output is displayed in a different panel. This can be done with the `tabsetPanel` function.
+The results panel is now getting a bit cluttered. If we wish we could change the layout so each distinct output is displayed in a different panel. This can be done with the `tabsetPanel` function. We can also include a tab to inspect the raw data with a *data table*
 
 ```{r eval=FALSE}
       mainPanel(
         tabsetPanel(
-          tabPanel("Bins", textOutput("chosenBins")),
-          tabPanel("Histogram",plotOutput("distPlot")),
+          tabPanel("Data", dataTableOutput("data")),
           tabPanel("Summary", verbatimTextOutput("summary")),
+          tabPanel("Histogram",plotOutput("distPlot")),
           tabPanel("Boxplot", plotOutput("boxPlot"))
           
         )
@@ -708,31 +721,23 @@ ui <- fluidPage(
    
    # Application title
    titlePanel("Old Faithful Geyser Data"),
-   
+           radioButtons("colour","Colour of histogram",choices=c("red","green","blue"),selected="red"),
    # Sidebar with a slider input for number of bins 
    sidebarLayout(
       sidebarPanel(
-        h1("Data  Exploration"),
-        h2("The histogram"),
-        radioButtons("colour","Colour of histogram",choices=c("red","green","blue"),selected="red"),
          sliderInput("bins",
                      "Number of bins:",
                      min = 1,
                      max = 50,
-                     value = 30),
-        helpText("This slider defines the number of bins to divided the data into"),
-        a("More about the histogram here", href="https://en.wikipedia.org/wiki/Histogram"),
-        br(),
-        p("App developed by University of Cambridge"),
-        img(src="http://www.cruk.cam.ac.uk/sites/all/themes/cambridge_theme/images/interface/main-logo-small.png")
+                     value = 30)
       ),
       
       # Show a plot of the generated distribution
       mainPanel(
         tabsetPanel(
-          tabPanel("Bins", textOutput("chosenBins")),
-          tabPanel("Histogram",plotOutput("distPlot")),
+          tabPanel("Data", dataTableOutput("data")),
           tabPanel("Summary", verbatimTextOutput("summary")),
+          tabPanel("Histogram",plotOutput("distPlot")),
           tabPanel("Boxplot", plotOutput("boxPlot"))
           
         )
@@ -764,16 +769,13 @@ server <- function(input, output) {
      
    })
    
-      output$chosenBins <- renderText({
-     
-     paste("Number of bins to draw histogram", input$bins)
-     
-   })
-   
+
+    output$data <- renderDataTable(faithful)
+      
 }
 
 # Run the application 
-shinyApp(ui = ui, server = server)
+shinyApp(ui = ui, server = server, options = list(height = 520))
 
 ```
 
@@ -791,25 +793,19 @@ ui <- fluidPage(
    # Sidebar with a slider input for number of bins 
    sidebarLayout(
       sidebarPanel(
-        h1("Data  Exploration"),
-        h2("The histogram"),
+
         radioButtons("colour","Colour of histogram",choices=c("red","green","blue"),selected="red"),
          sliderInput("bins",
                      "Number of bins:",
                      min = 1,
                      max = 50,
-                     value = 30),
-        helpText("This slider defines the number of bins to divided the data into"),
-        a("More about the histogram here", href="https://en.wikipedia.org/wiki/Histogram"),
-        br(),
-        p("App developed by University of Cambridge"),
-        img(src="http://www.cruk.cam.ac.uk/sites/all/themes/cambridge_theme/images/interface/main-logo-small.png")
+                     value = 30)
       ),
       
       # Show a plot of the generated distribution
       mainPanel(
         tabsetPanel(
-          tabPanel("Bins", textOutput("chosenBins")),
+          tabPanel("Data", dataTableOutput("data")),
           tabPanel("Histogram",plotOutput("distPlot")),
           tabPanel("Summary", verbatimTextOutput("summary")),
           tabPanel("Boxplot", plotOutput("boxPlot"))
@@ -843,12 +839,8 @@ server <- function(input, output) {
      
    })
    
-      output$chosenBins <- renderText({
-     
-     paste("Number of bins to draw histogram", input$bins)
-     
-   })
-   
+
+   output$data <- renderDataTable(faithful)
 }
 
 # Run the application 
