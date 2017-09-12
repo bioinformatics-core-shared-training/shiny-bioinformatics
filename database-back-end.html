@@ -224,9 +224,7 @@ div.tocify {
 <div id="introduction" class="section level3">
 <h3>Introduction</h3>
 <p>In this section we will look at how to work with very large data sets that it would not be feasible to have loaded completely into memory. We will instead store the data in a relational database and retrieve just the data we need to display within the Shiny application.</p>
-<p>You will need some of the R packages from the <code>tidyverse</code> collection to run this tutorial.</p>
-<pre class="r"><code>install.packages(&quot;tidyverse&quot;)</code></pre>
-<p>Following on from the breast cancer expression data example, we will rework that Shiny application such that the large expression data matrix is stored in a SQLite database.</p>
+<p>Following on from the breast cancer expression data example, we will rework the Shiny app such that the large expression data matrix is stored in a SQLite database.</p>
 <p>SQLite is a lightweight relational database management system that is very convenient to use when building and testing Shiny applications. If you are using a Mac or Linux machine you’re quite likely to already have this installed. Try typing <code>which sqlite3</code> at the command line.</p>
 <p>We will also be using the tidyverse package <code>dplyr</code> to filter and combine expression data and ER status for displaying as a boxplot and the piping mechanism using the <code>%&gt;%</code> operator. If you are unfamiliar with these, take a look at the <a href="http://bioinformatics-core-shared-training.github.io/r-intermediate/">Data Manipulation and Visualization Using R</a> course materials.</p>
 <p>One of the most powerful features of <code>dplyr</code> is that it can work almost seamlessly with a database back end with minimal changes to code that performs filtering and combining (or join) operations. Other databases supported include MySQL and PostgreSQL.</p>
@@ -254,7 +252,7 @@ div.tocify {
 <table>
 <thead>
 <tr class="header">
-<th>Probe</th>
+<th>probe</th>
 <th>NKI_4</th>
 <th>NKI_6</th>
 <th>NKI_7</th>
@@ -311,9 +309,9 @@ div.tocify {
 <table>
 <thead>
 <tr class="header">
-<th>Probe</th>
-<th>Sample</th>
-<th>Expression</th>
+<th>probe</th>
+<th>sample</th>
+<th>expression</th>
 </tr>
 </thead>
 <tbody>
@@ -376,36 +374,36 @@ library(Biobase)
 library(tidyverse)
 
 data(nki)</code></pre>
-<pre class="r"><code>probes &lt;- fData(nki) %&gt;%
-  transmute(Probe = as.character(probe), Gene = as.character(HUGO.gene.symbol))
-
-head(probes)</code></pre>
-<pre><code>##            Probe   Gene
-## 1 Contig45645_RC  GREM2
-## 2 Contig44916_RC  SUHW2
-## 3         D25272   &lt;NA&gt;
-## 4         J00129    FGB
-## 5 Contig29982_RC SCARA5
-## 6    Contig26811   &lt;NA&gt;</code></pre>
 <pre class="r"><code>erStatus &lt;- pData(nki) %&gt;%
-  transmute(Sample = as.character(samplename), ER = factor(er))
+  select(sample = samplename, er)
 
 head(erStatus)</code></pre>
-<pre><code>##   Sample ER
-## 1  NKI_4  1
-## 2  NKI_6  1
-## 3  NKI_7  0
-## 4  NKI_8  0
-## 5  NKI_9  1
-## 6 NKI_11  1</code></pre>
+<pre><code>##        sample er
+## NKI_4   NKI_4  1
+## NKI_6   NKI_6  1
+## NKI_7   NKI_7  0
+## NKI_8   NKI_8  0
+## NKI_9   NKI_9  1
+## NKI_11 NKI_11  1</code></pre>
+<pre class="r"><code>probes &lt;- fData(nki) %&gt;%
+  select(probe, gene = HUGO.gene.symbol)
+
+head(probes)</code></pre>
+<pre><code>##                         probe   gene
+## Contig45645_RC Contig45645_RC  GREM2
+## Contig44916_RC Contig44916_RC  SUHW2
+## D25272                 D25272   &lt;NA&gt;
+## J00129                 J00129    FGB
+## Contig29982_RC Contig29982_RC SCARA5
+## Contig26811       Contig26811   &lt;NA&gt;</code></pre>
 <pre class="r"><code>expressionData &lt;- exprs(nki) %&gt;%
   as.data.frame %&gt;%
-  rownames_to_column(&quot;Probe&quot;) %&gt;%
-  gather(Sample, Expression, -Probe) %&gt;%
-  filter(!is.na(Expression))
+  rownames_to_column(&quot;probe&quot;) %&gt;%
+  gather(sample, expression, -probe) %&gt;%
+  filter(!is.na(expression))
 
 head(expressionData)</code></pre>
-<pre><code>##            Probe Sample Expression
+<pre><code>##            probe sample expression
 ## 1 Contig45645_RC  NKI_4     -0.215
 ## 2 Contig44916_RC  NKI_4     -0.207
 ## 3         D25272  NKI_4     -0.158
@@ -418,29 +416,27 @@ head(expressionData)</code></pre>
 <h3>Create a SQLite database</h3>
 <p>We create a new SQLite database with the <code>src_sqlite</code> function. Then we use <code>copy_to</code> to create a database table for each of the data frames. Note that we create indexes on each of the columns that we might need to query or use when performing join operations to improve performance.</p>
 <pre class="r"><code># create a new SQLite3 database
-db &lt;- src_sqlite(&quot;nki.sqlite&quot;, create = TRUE)
+db &lt;- src_sqlite(&quot;breastCancerNKI.sqlite&quot;, create = TRUE)
 
 # create tables for each of the erStatus, probes and expressionData data frames
 # with indexes for efficient searches/filtering
-copy_to(db, erStatus, indexes = list(&quot;Sample&quot;, &quot;ER&quot;), temporary = FALSE, overwrite = TRUE)
-copy_to(db, probes, indexes = list(&quot;Probe&quot;, &quot;Gene&quot;), temporary = FALSE, overwrite = TRUE)
-copy_to(db, expressionData, indexes = list(&quot;Probe&quot;, &quot;Sample&quot;), temporary = FALSE, overwrite = TRUE)</code></pre>
+copy_to(db, erStatus, indexes = list(&quot;sample&quot;, &quot;er&quot;), temporary = FALSE, overwrite = TRUE)
+copy_to(db, probes, indexes = list(&quot;probe&quot;, &quot;gene&quot;), temporary = FALSE, overwrite = TRUE)
+copy_to(db, expressionData, indexes = list(&quot;probe&quot;, &quot;sample&quot;), temporary = FALSE, overwrite = TRUE)</code></pre>
 </div>
 <div id="test-retrieval-from-the-database" class="section level3">
 <h3>Test retrieval from the database</h3>
 <p>First we create the database connection using <code>src_sqlite</code> as before. Then we use the <code>tbl</code> function to create a <code>dplyr</code> table for each of our database tables.</p>
-<pre class="r"><code>library(tidyverse)
+<pre class="r"><code>db &lt;- src_sqlite(&quot;breastCancerNKI.sqlite&quot;)
 
-db &lt;- src_sqlite(&quot;nki.sqlite&quot;)
-
-probes &lt;- tbl(db, &quot;probes&quot;)
 erStatus &lt;- tbl(db, &quot;erStatus&quot;)
+probes &lt;- tbl(db, &quot;probes&quot;)
 expressionData &lt;- tbl(db, &quot;expressionData&quot;)</code></pre>
 <p>At this point no data have been loaded into memory. We can load the contents of an entire table using <code>collect</code>.</p>
 <pre class="r"><code>head(collect(erStatus))</code></pre>
 <pre><code>## # A tibble: 6 x 2
-##   Sample    ER
-##    &lt;chr&gt; &lt;chr&gt;
+##   sample    er
+##    &lt;chr&gt; &lt;int&gt;
 ## 1  NKI_4     1
 ## 2  NKI_6     1
 ## 3  NKI_7     0
@@ -451,13 +447,13 @@ expressionData &lt;- tbl(db, &quot;expressionData&quot;)</code></pre>
 <p>The following shows how to retrieve the expression data and ER status for the PTEN gene.</p>
 <pre class="r"><code>probes %&gt;%
   filter(Gene == &quot;PTEN&quot;) %&gt;%
-  left_join(expressionData, by = &quot;Probe&quot;) %&gt;%
-  left_join(erStatus, by = &quot;Sample&quot;) %&gt;%
+  left_join(expressionData, by = &quot;probe&quot;) %&gt;%
+  left_join(erStatus, by = &quot;sample&quot;) %&gt;%
   collect %&gt;%
   tbl_df</code></pre>
 <pre><code>## # A tibble: 668 x 5
-##       Probe  Gene Sample Expression    ER
-##       &lt;chr&gt; &lt;chr&gt;  &lt;chr&gt;      &lt;dbl&gt; &lt;chr&gt;
+##       probe  gene sample expression    er
+##       &lt;chr&gt; &lt;chr&gt;  &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;
 ##  1 AF019083  PTEN  NKI_4     -0.062     1
 ##  2 AF019083  PTEN  NKI_6     -0.072     1
 ##  3 AF019083  PTEN  NKI_7      0.064     0
@@ -473,29 +469,29 @@ expressionData &lt;- tbl(db, &quot;expressionData&quot;)</code></pre>
 <p>You can use the <code>show_query</code> function to see the SQL query that this being run on the SQLite database.</p>
 <pre class="r"><code>probes %&gt;%
   filter(Gene == &quot;PTEN&quot;) %&gt;%
-  left_join(expressionData, by = &quot;Probe&quot;) %&gt;%
-  left_join(erStatus, by = &quot;Sample&quot;) %&gt;%
+  left_join(expressionData, by = &quot;probe&quot;) %&gt;%
+  left_join(erStatus, by = &quot;sample&quot;) %&gt;%
   show_query</code></pre>
 <pre><code>## &lt;SQL&gt;
-## SELECT `TBL_LEFT`.`Probe` AS `Probe`, `TBL_LEFT`.`Gene` AS `Gene`, `TBL_LEFT`.`Sample` AS `Sample`, `TBL_LEFT`.`Expression` AS `Expression`, `TBL_RIGHT`.`ER` AS `ER`
-##   FROM (SELECT `TBL_LEFT`.`Probe` AS `Probe`, `TBL_LEFT`.`Gene` AS `Gene`, `TBL_RIGHT`.`Sample` AS `Sample`, `TBL_RIGHT`.`Expression` AS `Expression`
+## SELECT `TBL_LEFT`.`probe` AS `probe`, `TBL_LEFT`.`gene` AS `gene`, `TBL_LEFT`.`sample` AS `sample`, `TBL_LEFT`.`expression` AS `expression`, `TBL_RIGHT`.`er` AS `er`
+##   FROM (SELECT `TBL_LEFT`.`probe` AS `probe`, `TBL_LEFT`.`gene` AS `gene`, `TBL_RIGHT`.`sample` AS `sample`, `TBL_RIGHT`.`expression` AS `expression`
 ##   FROM (SELECT *
 ## FROM `probes`
 ## WHERE (`Gene` = 'PTEN')) AS `TBL_LEFT`
 ##   LEFT JOIN `expressionData` AS `TBL_RIGHT`
-##   ON (`TBL_LEFT`.`Probe` = `TBL_RIGHT`.`Probe`)
+##   ON (`TBL_LEFT`.`probe` = `TBL_RIGHT`.`probe`)
 ## ) AS `TBL_LEFT`
 ##   LEFT JOIN `erStatus` AS `TBL_RIGHT`
-##   ON (`TBL_LEFT`.`Sample` = `TBL_RIGHT`.`Sample`)</code></pre>
+##   ON (`TBL_LEFT`.`sample` = `TBL_RIGHT`.`sample`)</code></pre>
 </div>
 <div id="update-the-shiny-application" class="section level3">
 <h3>Update the shiny application</h3>
 <pre class="r"><code>library(shiny)
 library(tidyverse)
 
-db &lt;- src_sqlite(&quot;nki.sqlite&quot;)
-probes &lt;- tbl(db, &quot;probes&quot;)
+db &lt;- src_sqlite(&quot;breastCancerNKI.sqlite&quot;)
 erStatus &lt;- tbl(db, &quot;erStatus&quot;)
+probes &lt;- tbl(db, &quot;probes&quot;)
 expressionData &lt;- tbl(db, &quot;expressionData&quot;)
 
 ui &lt;- fluidPage(
@@ -515,10 +511,12 @@ server &lt;- function(input, output) {
   output$boxplot &lt;- renderPlot({
     probes %&gt;%
       filter(Gene == input$thegene) %&gt;%
-      left_join(expressionData, by = &quot;Probe&quot;) %&gt;%
-      left_join(erStatus, by = &quot;Sample&quot;) %&gt;%
+      left_join(expressionData, by = &quot;probe&quot;) %&gt;%
+      left_join(erStatus, by = &quot;sample&quot;) %&gt;%
+      select(probe, expression, er) %&gt;%
       collect %&gt;%
-      ggplot(aes(x = ER, y = Expression, fill = Probe)) +
+      mutate(er = as.factor(ifelse(er == 1, &quot;positive&quot;, &quot;negative&quot;))) %&gt;%
+      ggplot(aes(x = er, y = expression, fill = probe)) +
       geom_boxplot()
   })
 }

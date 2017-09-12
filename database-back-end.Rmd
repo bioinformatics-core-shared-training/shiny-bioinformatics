@@ -17,13 +17,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 In this section we will look at how to work with very large data sets that it would not be feasible to have loaded completely into memory. We will instead store the data in a relational database and retrieve just the data we need to display within the Shiny application.
 
-You will need some of the R packages from the `tidyverse` collection to run this tutorial.
-
-```{r eval = FALSE}
-install.packages("tidyverse")
-```
-
-Following on from the breast cancer expression data example, we will rework that Shiny application such that the large expression data matrix is stored in a SQLite database.
+Following on from the breast cancer expression data example, we will rework the Shiny app such that the large expression data matrix is stored in a SQLite database.
 
 SQLite is a lightweight relational database management system that is very convenient to use when building and testing Shiny applications. If you are using a Mac or Linux machine you're quite likely to already have this installed. Try typing `which sqlite3` at the command line.
 
@@ -50,7 +44,7 @@ We first need to convert the NKI expression data from the familiar expresssion m
 
 #### Wide format
 
-Probe          |  NKI_4 |  NKI_6 |  NKI_7 |  NKI_8 |  NKI_9
+probe          |  NKI_4 |  NKI_6 |  NKI_7 |  NKI_8 |  NKI_9
 ---------------|--------|--------|--------|--------|-------
 Contig45645_RC | -0.215 |  0.071 |  0.182 | -0.343 | -0.134
 Contig44916_RC | -0.207 |  0.055 |  0.077 |  0.302 |  0.051
@@ -60,7 +54,7 @@ Contig29982_RC | -0.267 | -0.310 | -0.120 | -0.447 | -0.536
 
 #### Narrow or tidy format
 
-Probe          | Sample | Expression
+probe          | sample | expression
 ---------------|--------|-----------
 Contig45645_RC | NKI_4  |   -0.215
 Contig44916_RC | NKI_4  |   -0.207
@@ -86,21 +80,21 @@ data(nki)
 ```
 
 ```{r convert_to_tidy_format, eval = TRUE}
-probes <- fData(nki) %>%
-  transmute(Probe = as.character(probe), Gene = as.character(HUGO.gene.symbol))
-
-head(probes)
-
 erStatus <- pData(nki) %>%
-  transmute(Sample = as.character(samplename), ER = factor(er))
+  select(sample = samplename, er)
 
 head(erStatus)
 
+probes <- fData(nki) %>%
+  select(probe, gene = HUGO.gene.symbol)
+
+head(probes)
+
 expressionData <- exprs(nki) %>%
   as.data.frame %>%
-  rownames_to_column("Probe") %>%
-  gather(Sample, Expression, -Probe) %>%
-  filter(!is.na(Expression))
+  rownames_to_column("probe") %>%
+  gather(sample, expression, -probe) %>%
+  filter(!is.na(expression))
 
 head(expressionData)
 ```
@@ -112,13 +106,13 @@ We create a new SQLite database with the `src_sqlite` function. Then we use `cop
 
 ```{r create_sqlite_db, eval = TRUE}
 # create a new SQLite3 database
-db <- src_sqlite("nki.sqlite", create = TRUE)
+db <- src_sqlite("breastCancerNKI.sqlite", create = TRUE)
 
 # create tables for each of the erStatus, probes and expressionData data frames
 # with indexes for efficient searches/filtering
-copy_to(db, erStatus, indexes = list("Sample", "ER"), temporary = FALSE, overwrite = TRUE)
-copy_to(db, probes, indexes = list("Probe", "Gene"), temporary = FALSE, overwrite = TRUE)
-copy_to(db, expressionData, indexes = list("Probe", "Sample"), temporary = FALSE, overwrite = TRUE)
+copy_to(db, erStatus, indexes = list("sample", "er"), temporary = FALSE, overwrite = TRUE)
+copy_to(db, probes, indexes = list("probe", "gene"), temporary = FALSE, overwrite = TRUE)
+copy_to(db, expressionData, indexes = list("probe", "sample"), temporary = FALSE, overwrite = TRUE)
 ```
 
 
@@ -127,12 +121,10 @@ copy_to(db, expressionData, indexes = list("Probe", "Sample"), temporary = FALSE
 First we create the database connection using `src_sqlite` as before. Then we use the `tbl` function to create a `dplyr` table for each of our database tables.
 
 ```{r message = FALSE}
-library(tidyverse)
+db <- src_sqlite("breastCancerNKI.sqlite")
 
-db <- src_sqlite("nki.sqlite")
-
-probes <- tbl(db, "probes")
 erStatus <- tbl(db, "erStatus")
+probes <- tbl(db, "probes")
 expressionData <- tbl(db, "expressionData")
 ```
 
@@ -149,8 +141,8 @@ The following shows how to retrieve the expression data and ER status for the PT
 ```{r}
 probes %>%
   filter(Gene == "PTEN") %>%
-  left_join(expressionData, by = "Probe") %>%
-  left_join(erStatus, by = "Sample") %>%
+  left_join(expressionData, by = "probe") %>%
+  left_join(erStatus, by = "sample") %>%
   collect %>%
   tbl_df
 ```
@@ -162,8 +154,8 @@ You can use the `show_query` function to see the SQL query that this being run o
 ```{r}
 probes %>%
   filter(Gene == "PTEN") %>%
-  left_join(expressionData, by = "Probe") %>%
-  left_join(erStatus, by = "Sample") %>%
+  left_join(expressionData, by = "probe") %>%
+  left_join(erStatus, by = "sample") %>%
   show_query
 ```
 
@@ -174,9 +166,9 @@ probes %>%
 library(shiny)
 library(tidyverse)
 
-db <- src_sqlite("nki.sqlite")
-probes <- tbl(db, "probes")
+db <- src_sqlite("breastCancerNKI.sqlite")
 erStatus <- tbl(db, "erStatus")
+probes <- tbl(db, "probes")
 expressionData <- tbl(db, "expressionData")
 
 ui <- fluidPage(
@@ -196,10 +188,12 @@ server <- function(input, output) {
   output$boxplot <- renderPlot({
     probes %>%
       filter(Gene == input$thegene) %>%
-      left_join(expressionData, by = "Probe") %>%
-      left_join(erStatus, by = "Sample") %>%
+      left_join(expressionData, by = "probe") %>%
+      left_join(erStatus, by = "sample") %>%
+      select(probe, expression, er) %>%
       collect %>%
-      ggplot(aes(x = ER, y = Expression, fill = Probe)) +
+      mutate(er = as.factor(ifelse(er == 1, "positive", "negative"))) %>%
+      ggplot(aes(x = er, y = expression, fill = probe)) +
       geom_boxplot()
   })
 }
