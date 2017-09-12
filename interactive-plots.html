@@ -155,7 +155,7 @@ ui &lt;- fluidPage(
 server &lt;- function(input, output) {
 
   differentialExpressionResults &lt;-
-    read.csv(&quot;NKI-DE-results.csv&quot;) %&gt;%
+    read.csv(&quot;NKI-DE-results.csv&quot;, stringsAsFactors = FALSE) %&gt;%
     mutate(
       probe.type = factor(ifelse(grepl(&quot;^Contig&quot;, probe), &quot;EST&quot;, &quot;mRNA&quot;)),
       minusLog10Pvalue = -log10(adj.P.Val)
@@ -180,7 +180,7 @@ server &lt;- function(input, output) {
         `p-value` = signif(adj.P.Val, digits = 2)
       ),
 
-    options = list(pageLength = 10, dom = &quot;tip&quot;, searching = FALSE)
+    options = list(dom = &quot;tip&quot;, pageLength = 10, searching = FALSE)
   )
 }
 
@@ -200,7 +200,7 @@ shinyApp(ui, server, options = list(height = 600))</code></pre>
 </div>
 </div>
 <div id="plotly" class="section level3">
-<h3>plotly</h3>
+<h3>Plotly</h3>
 <p>Plotly is an R package for creating interactive web-based graphs via the open source JavaScript graphing library plotly.js (which in turn is built on D3.js). Although developed by a company of the same name, it is open source.</p>
 <p>One really great feature of the plotly R package is the ability to convert a ggplot figure into an interactive plot using the <code>ggplotly</code> function. This enables the resulting plot to be even more interactive with features such as zooming, panning, tooltips, toggling the display of subsets of data by clicking on legend items, and a save as PNG option.</p>
 <p>In the following example, we’ve changed the above Shiny application to use <code>ggplotly</code>. In this case, selection is facilitated by drawing a box around data points of interest (‘brushing’). Handling of click, hover and relayout (e.g. zoom) events are also supported.</p>
@@ -225,7 +225,7 @@ ui &lt;- fluidPage(
 server &lt;- function(input, output) {
 
   differentialExpressionResults &lt;-
-    read.csv(&quot;NKI-DE-results.csv&quot;) %&gt;%
+    read.csv(&quot;NKI-DE-results.csv&quot;, stringsAsFactors = FALSE) %&gt;%
     mutate(
       probe.type = factor(ifelse(grepl(&quot;^Contig&quot;, probe), &quot;EST&quot;, &quot;mRNA&quot;)),
       minusLog10Pvalue = -log10(adj.P.Val),
@@ -265,7 +265,7 @@ server &lt;- function(input, output) {
         `p-value` = signif(adj.P.Val, digits = 2)
       )
   },
-    options = list(pageLength = 10, dom = &quot;tip&quot;, searching = FALSE)
+    options = list(dom = &quot;tip&quot;, pageLength = 10, searching = FALSE)
   )
 }
 

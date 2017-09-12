@@ -6,7 +6,7 @@ output: html_document
 runtime: shiny
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include = FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
@@ -50,7 +50,7 @@ ui <- fluidPage(
 server <- function(input, output) {
 
   differentialExpressionResults <-
-    read.csv("NKI-DE-results.csv") %>%
+    read.csv("NKI-DE-results.csv", stringsAsFactors = FALSE) %>%
     mutate(
       probe.type = factor(ifelse(grepl("^Contig", probe), "EST", "mRNA")),
       minusLog10Pvalue = -log10(adj.P.Val)
@@ -75,7 +75,7 @@ server <- function(input, output) {
         `p-value` = signif(adj.P.Val, digits = 2)
       ),
 
-    options = list(pageLength = 10, dom = "tip", searching = FALSE)
+    options = list(dom = "tip", pageLength = 10, searching = FALSE)
   )
 }
 
@@ -94,7 +94,7 @@ Try changing the code above to handle mouse-over (hover) and brush events (brush
 * More [advanced guide](https://shiny.rstudio.com/articles/plot-interaction-advanced.html) to interactive plots from RStudio
 
 
-### plotly
+### Plotly
 
 Plotly is an R package for creating interactive web-based graphs via the open source JavaScript graphing library plotly.js (which in turn is built on D3.js). Although developed by a company of the same name, it is open source.
 
@@ -124,7 +124,7 @@ ui <- fluidPage(
 server <- function(input, output) {
 
   differentialExpressionResults <-
-    read.csv("NKI-DE-results.csv") %>%
+    read.csv("NKI-DE-results.csv", stringsAsFactors = FALSE) %>%
     mutate(
       probe.type = factor(ifelse(grepl("^Contig", probe), "EST", "mRNA")),
       minusLog10Pvalue = -log10(adj.P.Val),
@@ -164,7 +164,7 @@ server <- function(input, output) {
         `p-value` = signif(adj.P.Val, digits = 2)
       )
   },
-    options = list(pageLength = 10, dom = "tip", searching = FALSE)
+    options = list(dom = "tip", pageLength = 10, searching = FALSE)
   )
 }
 
@@ -191,3 +191,5 @@ Several example shiny applications that showcase these and other interactive vis
 
 * [RStudio gallery](https://shiny.rstudio.com/gallery/)
 * [htmlwidgets for R](http://www.htmlwidgets.org/index.html)
+
+
