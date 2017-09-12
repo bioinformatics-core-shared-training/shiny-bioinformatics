@@ -3,7 +3,7 @@ title: "Interactive Plots"
 author: "Matt Eldridge"
 date: '`r format(Sys.time(), "Last modified: %d %b %Y")`'
 output: html_document
-runtime: shiny
+# runtime: shiny
 ---
 
 ```{r setup, include=FALSE}
@@ -35,13 +35,9 @@ library(tidyverse)
 
 differentialExpressionResults <-
   read.csv("NKI-DE-results.csv") %>%
-  transmute(
-    Gene = as.character(HUGO.gene.symbol),
-    Probe = as.character(probe),
-    ProbeType = factor(ifelse(grepl("^Contig", Probe), "EST", "mRNA")),
-    logFC = signif(logFC, digits = 2),
-    minusLog10Pvalue = -log10(adj.P.Val),
-    adj.P.Val = signif(adj.P.Val, digits = 2)
+  mutate(
+    probe.type = factor(ifelse(grepl("^Contig", probe), "EST", "mRNA")),
+    minusLog10Pvalue = -log10(adj.P.Val)
   )
 
 ui <- fluidPage(
@@ -61,7 +57,7 @@ server <- function(input, output) {
 
   output$volcanoPlot <- renderPlot({
 
-    ggplot(differentialExpressionResults, aes(x = logFC, y = minusLog10Pvalue, colour = ProbeType)) +
+    ggplot(differentialExpressionResults, aes(x = logFC, y = minusLog10Pvalue, colour = probe.type)) +
       geom_point() +
       xlab("log fold change") +
       ylab("-log10(P-value)") +
@@ -71,7 +67,12 @@ server <- function(input, output) {
   output$selectedProbesTable <- renderDataTable(
 
     nearPoints(differentialExpressionResults, input$volcanoPlotSelection) %>%
-      select(Probe, Gene, logFC, adj.P.Val),
+      transmute(
+        probe,
+        gene = HUGO.gene.symbol,
+        `log fold change` = signif(logFC, digits = 2),
+        `p-value` = signif(adj.P.Val, digits = 2)
+      ),
     options = list(pageLength = 10, dom = "tip", searching = FALSE)
   )
 }
@@ -95,27 +96,23 @@ Try changing the code above to handle mouse-over (hover) and brush events (brush
 
 Plotly is an R package for creating interactive web-based graphs via the open source JavaScript graphing library plotly.js (which in turn is built on D3.js). Although developed by a company of the same name, it is open source.
 
-One really great feature of the plotly R package is the ability to convert a ggplot figure into an interactive plot using the `ggplotly` function. This enables the resulting plot to be even more interactive with features such as zooming, panning, tooltips and a save as PNG option.
+One really great feature of the plotly R package is the ability to convert a ggplot figure into an interactive plot using the `ggplotly` function. This enables the resulting plot to be even more interactive with features such as zooming, panning, tooltips, toggling the display of subsets of data by clicking on legend items, and a save as PNG option.
 
 In the following example, we've changed the above Shiny application to use `ggplotly`. In this case, selection is facilitated by drawing a box around data points of interest ('brushing'). Handling of click, hover and relayout (e.g. zoom) events are also supported.
 
-```{r}
+```{r message = FALSE}
 library(shiny)
-suppressPackageStartupMessages(library(plotly))
+library(plotly)
 library(tidyverse)
 
 differentialExpressionResults <-
   read.csv("NKI-DE-results.csv") %>%
-  transmute(
-    Gene = as.character(HUGO.gene.symbol),
-    Probe = as.character(probe),
-    ProbeType = factor(ifelse(grepl("^Contig", Probe), "EST", "mRNA")),
-    logFC = signif(logFC, digits = 2),
+  mutate(
+    probe.type = factor(ifelse(grepl("^Contig", probe), "EST", "mRNA")),
     minusLog10Pvalue = -log10(adj.P.Val),
-    adj.P.Val = signif(adj.P.Val, digits = 2)
+    tooltip = ifelse(is.na(HUGO.gene.symbol), probe, paste(HUGO.gene.symbol, " (", probe, ")", sep = ""))
   ) %>%
-  sample_n(1000) %>%
-  mutate(DisplayLabel = ifelse(is.na(Gene), Probe, paste(Gene, " (", Probe, ")", sep = "")))
+  sample_n(1000)
 
 ui <- fluidPage(
   fluidRow(
@@ -137,8 +134,8 @@ server <- function(input, output) {
     plot <- differentialExpressionResults %>%
       ggplot(aes(x = logFC,
                  y = minusLog10Pvalue,
-                 colour = ProbeType,
-                 text = DisplayLabel,
+                 colour = probe.type,
+                 text = tooltip,
                  key = row.names(differentialExpressionResults))) +
       geom_point() +
       xlab("log fold change") +
@@ -157,11 +154,16 @@ server <- function(input, output) {
     selectedData <- differentialExpressionResults %>% slice(0)
     if (!is.null(eventData)) selectedData <- differentialExpressionResults[eventData$key,]
 
-    selectedData %>% select(Probe, Gene, logFC, adj.P.Val)
+    selectedData %>%
+      transmute(
+        probe,
+        gene = HUGO.gene.symbol,
+        `log fold change` = signif(logFC, digits = 2),
+        `p-value` = signif(adj.P.Val, digits = 2)
+      )
   },
     options = list(pageLength = 10, dom = "tip", searching = FALSE)
   )
-
 }
 
 shinyApp(ui, server, options = list(height = 520))
