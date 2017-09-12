@@ -216,7 +216,7 @@ div.tocify {
 
 <h1 class="title toc-ignore">Using a Database Back End</h1>
 <h4 class="author"><em>Matt Eldridge</em></h4>
-<h4 class="date"><em>Last modified: 11 Sep 2017</em></h4>
+<h4 class="date"><em>Last modified: 12 Sep 2017</em></h4>
 
 </div>
 
@@ -372,28 +372,46 @@ div.tocify {
 <p>Note that we’ll also be using ggplot2 to create our boxplot and that also requires the data to be in the narrow, or tidy, format.</p>
 <p>We’ll also create data frames for the probe/gene mapping and sample ER status containing just the information we need for the Shiny application.</p>
 <pre class="r"><code>library(breastCancerNKI)
-suppressPackageStartupMessages(library(Biobase))
-suppressPackageStartupMessages(library(tidyverse))
+library(Biobase)
+library(tidyverse)
 
-data(nki)
-
-probes &lt;- fData(nki) %&gt;%
+data(nki)</code></pre>
+<pre class="r"><code>probes &lt;- fData(nki) %&gt;%
   transmute(Probe = as.character(probe), Gene = as.character(HUGO.gene.symbol))
 
-head(probes)
-
-erStatus &lt;- pData(nki) %&gt;%
+head(probes)</code></pre>
+<pre><code>##            Probe   Gene
+## 1 Contig45645_RC  GREM2
+## 2 Contig44916_RC  SUHW2
+## 3         D25272   &lt;NA&gt;
+## 4         J00129    FGB
+## 5 Contig29982_RC SCARA5
+## 6    Contig26811   &lt;NA&gt;</code></pre>
+<pre class="r"><code>erStatus &lt;- pData(nki) %&gt;%
   transmute(Sample = as.character(samplename), ER = factor(er))
 
-head(erStatus)
-
-expressionData &lt;- exprs(nki) %&gt;%
+head(erStatus)</code></pre>
+<pre><code>##   Sample ER
+## 1  NKI_4  1
+## 2  NKI_6  1
+## 3  NKI_7  0
+## 4  NKI_8  0
+## 5  NKI_9  1
+## 6 NKI_11  1</code></pre>
+<pre class="r"><code>expressionData &lt;- exprs(nki) %&gt;%
   as.data.frame %&gt;%
   rownames_to_column(&quot;Probe&quot;) %&gt;%
   gather(Sample, Expression, -Probe) %&gt;%
   filter(!is.na(Expression))
 
 head(expressionData)</code></pre>
+<pre><code>##            Probe Sample Expression
+## 1 Contig45645_RC  NKI_4     -0.215
+## 2 Contig44916_RC  NKI_4     -0.207
+## 3         D25272  NKI_4     -0.158
+## 4         J00129  NKI_4     -0.819
+## 5 Contig29982_RC  NKI_4     -0.267
+## 6    Contig26811  NKI_4      0.229</code></pre>
 </div>
 </div>
 <div id="create-a-sqlite-database" class="section level3">
@@ -411,7 +429,7 @@ copy_to(db, expressionData, indexes = list(&quot;Probe&quot;, &quot;Sample&quot;
 <div id="test-retrieval-from-the-database" class="section level3">
 <h3>Test retrieval from the database</h3>
 <p>First we create the database connection using <code>src_sqlite</code> as before. Then we use the <code>tbl</code> function to create a <code>dplyr</code> table for each of our database tables.</p>
-<pre class="r"><code>suppressPackageStartupMessages(library(tidyverse))
+<pre class="r"><code>library(tidyverse)
 
 db &lt;- src_sqlite(&quot;nki.sqlite&quot;)
 
@@ -483,10 +501,12 @@ expressionData &lt;- tbl(db, &quot;expressionData&quot;)
 ui &lt;- fluidPage(
   sidebarLayout(
     sidebarPanel(
-      selectInput(&quot;thegene&quot;, &quot;Gene&quot;, choices=c(&quot;ESR1&quot;, &quot;ERBB2&quot;, &quot;PTEN&quot;), selected  = &quot;ESR1&quot;)
+      selectInput(&quot;thegene&quot;, &quot;Gene&quot;, choices = c(&quot;ESR1&quot;, &quot;ERBB2&quot;, &quot;PTEN&quot;), selected = &quot;ESR1&quot;),
+      width = 3
     ),
     mainPanel(
-      plotOutput(&quot;boxplot&quot;)
+      plotOutput(&quot;boxplot&quot;),
+      width = 9
     )
   )
 )
@@ -505,7 +525,7 @@ server &lt;- function(input, output) {
 
 shinyApp(ui = ui, server = server)</code></pre>
 <div style="width: 100% ; height: 400px ; text-align: center; box-sizing: border-box; -moz-box-sizing: border-box; -webkit-box-sizing: border-box;" class="muted well">Shiny applications not supported in static R Markdown documents</div>
-<p>Note that PTEN has two probes. Previously we only showed the expression values for the first matching probe but here we show the data for all probes, taking advantage of our reformatted data and plotting with ggplot2.</p>
+<p>Note that PTEN has two probes. In the previous part of the course we showed only the expression values for the first matching probe but here we display the data for all probes, taking advantage of our reformatted data and plotting with ggplot2.</p>
 </div>
 
 

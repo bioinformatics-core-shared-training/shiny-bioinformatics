@@ -9,10 +9,9 @@ output:
 runtime: shiny
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include = FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-
 
 ### Introduction
 
@@ -78,13 +77,15 @@ Note that we'll also be using ggplot2 to create our boxplot and that also requir
 
 We'll also create data frames for the probe/gene mapping and sample ER status containing just the information we need for the Shiny application.
 
-```{r convert_to_tidy_format, eval = FALSE}
+```{r message = FALSE}
 library(breastCancerNKI)
-suppressPackageStartupMessages(library(Biobase))
-suppressPackageStartupMessages(library(tidyverse))
+library(Biobase)
+library(tidyverse)
 
 data(nki)
+```
 
+```{r convert_to_tidy_format, eval = TRUE}
 probes <- fData(nki) %>%
   transmute(Probe = as.character(probe), Gene = as.character(HUGO.gene.symbol))
 
@@ -109,7 +110,7 @@ head(expressionData)
 
 We create a new SQLite database with the `src_sqlite` function. Then we use `copy_to` to create a database table for each of the data frames. Note that we create indexes on each of the columns that we might need to query or use when performing join operations to improve performance.
 
-```{r create_sqlite_db, eval = FALSE}
+```{r create_sqlite_db, eval = TRUE}
 # create a new SQLite3 database
 db <- src_sqlite("nki.sqlite", create = TRUE)
 
@@ -125,8 +126,8 @@ copy_to(db, expressionData, indexes = list("Probe", "Sample"), temporary = FALSE
 
 First we create the database connection using `src_sqlite` as before. Then we use the `tbl` function to create a `dplyr` table for each of our database tables.
 
-```{r}
-suppressPackageStartupMessages(library(tidyverse))
+```{r message = FALSE}
+library(tidyverse)
 
 db <- src_sqlite("nki.sqlite")
 
@@ -181,10 +182,12 @@ expressionData <- tbl(db, "expressionData")
 ui <- fluidPage(
   sidebarLayout(
     sidebarPanel(
-      selectInput("thegene", "Gene", choices=c("ESR1", "ERBB2", "PTEN"), selected  = "ESR1")
+      selectInput("thegene", "Gene", choices = c("ESR1", "ERBB2", "PTEN"), selected = "ESR1"),
+      width = 3
     ),
     mainPanel(
-      plotOutput("boxplot")
+      plotOutput("boxplot"),
+      width = 9
     )
   )
 )
@@ -204,4 +207,6 @@ server <- function(input, output) {
 shinyApp(ui = ui, server = server)
 ```
 
-Note that PTEN has two probes. Previously we only showed the expression values for the first matching probe but here we show the data for all probes, taking advantage of our reformatted data and plotting with ggplot2.
+Note that PTEN has two probes. In the previous part of the course we showed only the expression values for the first matching probe but here we display the data for all probes, taking advantage of our reformatted data and plotting with ggplot2.
+
+
