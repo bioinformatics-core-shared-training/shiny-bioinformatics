@@ -193,7 +193,7 @@ server <- function(input, output) {
 }
 
 # Run the application 
-shinyApp(ui = ui, server = server)
+shinyApp(ui = ui, server = server, options = list(height = 520))
 ```
 
 
@@ -292,7 +292,7 @@ server <- function(input, output) {
 }
 
 # Run the application 
-shinyApp(ui = ui, server = server)
+shinyApp(ui = ui, server = server, options = list(height = 520))
 ```
 
 
@@ -362,7 +362,7 @@ server <- function(input, output) {
   
 }
 # Run the application 
-shinyApp(ui = ui, server = server)
+shinyApp(ui = ui, server = server, options = list(height = 750))
 ```
 
 ## Code Re-use
@@ -552,7 +552,7 @@ server <- function(input, output) {
       )
 }
 # Run the application 
-shinyApp(ui = ui, server = server)
+shinyApp(ui = ui, server = server, options = list(height = 750))
 ```
 
 ### Dynamic tables
