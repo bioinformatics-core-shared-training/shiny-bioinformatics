@@ -183,7 +183,7 @@ As with other client-side JavaScript libraries, the processing required for the 
 
 [HighCharts](https://www.highcharts.com) is a popular commercial interactive JavaScript charting library. It is free for non-commercial use. There are at least two R wrapper packages for HighCharts. Here we use the [highcharter](http://jkunst.com/highcharter) package.
 
-The number of [configuration parameters](http://api.highcharts.com/highcharts) for HighCharts is bewildering, providing control over almost all aspects of plotting. The documentation is comprehensive, at least that is if you're programming directly in JavaScript. The refernce manual for the highcharter package has improved considerably but there is still quite a steep learning curve involved in using the package and working out how to specify a configuration parameter is not always straightforward.
+The array of [configuration parameters](http://api.highcharts.com/highcharts) for HighCharts is somewhat bewildering, providing control over almost all aspects of plotting. The documentation is comprehensive, at least that is if you're programming directly in JavaScript. The refernce manual for the highcharter package has improved considerably but there is still quite a steep learning curve involved in using the package and working out how to specify a configuration parameter is not always straightforward.
 
 Event handling for tooltips and mouse clicks is also more complicated and involves creating small JavaScript functions.
 
