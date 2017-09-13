@@ -142,7 +142,7 @@ ui <- fluidPage(
 
 - The layout of the app is using the sidebar style. 
 - There are two panels in the app layout; defined by the `sidebarPanel` and `mainPanel` arguments respectively
-- A slider bar is used to choose a different value of `bins`, and this value can be accessed as `input$bins` from within in the `server` function (see later).  
+- A slider bar is used to choose a different value of the `bins` variable, and this value can be accessed from within in the `server` function (see later) in order to re-draw the plot.  
 - A plot is displayed in the main panel, which we have chosen to call `distPlot`.
 
 ## HTML and other formatting
@@ -235,7 +235,7 @@ Other types of input are available for us to choose from and follow a similar sy
 - `checkboxInput`
     + set a value to true or false
 - `radioButons`
-    + select a value 
+    + select a value from a list
 - `textInput`
     + type some text
 - `dateInput`
@@ -245,29 +245,23 @@ Other types of input are available for us to choose from and follow a similar sy
 
 To add an extra input option, we need to add it as an argument to the `sidebarPanel` function. We could add a option to colour the histogram using the `radioButton` function. The order of the arguments to `sidebarPanel` dictates the order in which the various elements are rendered in the HTML.
 
+Try copying-and-pasting this code into your `app.R` file
 
 ```{r eval=FALSE}
       ######
       sidebarPanel(
 
-        h1("Data  Exploration"),
-        h2("The histogram"),
         radioButtons("colour","Colour of histogram",choices=c("red","green","blue"),selected="red"),
          sliderInput("bins",
                      "Number of bins:",
                      min = 1,
                      max = 50,
-                     value = 30),
-        helpText("This slider defines the number of bins to divided the data into"),
-        a("More about the histogram here", href="https://en.wikipedia.org/wiki/Histogram"),
-        br(),
-        p("App developed by University of Cambridge"),
-        img(src="http://www.cruk.cam.ac.uk/sites/all/themes/cambridge_theme/images/interface/main-logo-small.png")
+                     value = 30)
       ),
       ######
 ```
 
-To actually access the value that has been selected, we need to modify the code in the `server` section of our `app.R` script. This part of the script defines how each of the outputs that appear in the main panel are generated.
+You should see a set of radio buttons appear in the side panel. However, selecting a different option has no effect on the histogram. To do this we need to modify the code in the `server` section of our `app.R` script. This part of the script defines how each of the outputs that appear in the main panel are generated.
 
 In this example, we just have a histogram of the `faithful` dataset. In the UI part of the script we have defined a plot called `distPlot`.
 
@@ -277,9 +271,14 @@ In this example, we just have a histogram of the `faithful` dataset. In the UI p
       )
 ```
 
-The server script must specify how `distPlot` is created and assign it to the list of outputs. The code tells us how the `bins` parameter that is changed by the slider is used in the generation of the histogram.
+The server script must specify how `distPlot` is created and assign it to the list of outputs. 
 
-We use "base" graphics to plot the histogram, but `shiny` is equally happy to use `ggplot2`, `lattice`, or whatever your favourite way of plotting is. The plot itself is static, but you can incorporate *interactive* graphs as we will see later.
+- `distPlot` is defined to be the result of `renderPlot`
+- to access the value that the user has selected from the slider we use `input$bins`
+- the number of bins in the histogram is re-calculated whenever a different value is selected in the slider
+- the histogram is re-draw using the current value of `bins`
+
+Note that we use *"base"* graphics to plot the histogram, but `shiny` is equally happy to use `ggplot2`, `lattice`, or whatever your favourite way of plotting is. The plot itself is static, but you can incorporate *interactive* graphs as we will see later.
 
 ```{r eval=FALSE}
 server <- function(input, output) {
@@ -299,6 +298,7 @@ server <- function(input, output) {
 To modify the colour according to what the user has selected, we change the `col` argument in the `hist` function from the original `darkgray` to `input$colour`.
 
 ```{r eval=FALSE}
+# Try replacing the server function in your app.R and see what happens
 server <- function(input, output) {
    
    output$distPlot <- renderPlot({
@@ -314,7 +314,7 @@ server <- function(input, output) {
 
 ```
 
-In this example the value of `input$colour` is passed directly to the plotting function. This works because `red`, `green`, `blue` are valid colours. We could change the values displayed in the drop-down, but need to make sure they get transformed appropriately. Changing the configuration of the `radioButtons` to the following wouldn't work.
+In this example, the value of `input$colour` is passed directly to the plotting function. This works because `red`, `green`, `blue` are valid colours. We could change the values displayed in the drop-down to be more human-readable, but need to make sure they get transformed appropriately. Changing the configuration of the `radioButtons` to the following wouldn't work.
 
 ```{r eval=FALSE}
         radioButtons("colour","Histogram Colour",choices=c("I want Red","I want Green","I want Blue"),selected="I want Red"),
@@ -579,7 +579,7 @@ Aside from a plot, other types of output include
 - `renderTable`
 
 
-We will add a numerical summary of our dataset and a message to report the number of bins that were selected. These elements can be added to the `mainPanel` using `verbatimTextOutput` and `textOutput` respectively:-
+We will add a numerical summary of our dataset and an interactive table of the raw data values. This elements can be added to the `mainPanel` using `verbatimTextOutput` type
 
 ```{r eval=FALSE}
 
@@ -587,13 +587,13 @@ We will add a numerical summary of our dataset and a message to report the numbe
       mainPanel(
          plotOutput("distPlot"),
          verbatimTextOutput("summary"),
-         plotOutput("boxPlot")
+         dataTableOutput("data")
       )
 
 
 ```
 
-In the `server` function we include the code to compute the relevant outputs. As part of the `server` function definition we can also include code to load required packages and datasets. In order to overcome the error observed above we can define the variable `x` that is used in plotting.
+In the `server` function we include the code to compute the relevant outputs. As part of the `server` function definition we can also include code to load required packages and datasets. In order to overcome the error observed above we can define the variable `x` that is used in plotting at the start of the `server` code. This line of code will only get run once each when the server is started.
 
 ```{r eval=FALSE}
 x <- faithful[,2]
@@ -625,7 +625,7 @@ server <- function(input, output) {
    output$summary <- renderPrint({
      summary(x)
    })
-   
+
 
 }
 ```
@@ -684,11 +684,7 @@ server <- function(input, output) {
      summary(x)
    })
    
-   output$chosenBins <- renderText({
-     
-     paste("Number of bins to draw histogram", input$bins)
-     
-   })
+
 }
 
 # Run the application 
@@ -696,7 +692,7 @@ shinyApp(ui = ui, server = server, options = list(height = 800))
 ```
 
 
-The results panel is now getting a bit cluttered. If we wish we could change the layout so each distinct output is displayed in a different panel. This can be done with the `tabsetPanel` function. We can also include a tab to inspect the raw data with a *data table*
+The results panel is now getting a bit cluttered. If we wish we could change the layout so each distinct output is displayed in a different panel. This can be done with the `tabsetPanel` function. We can also add the option to view the data in an interactive table with `dataTableOutput`.
 
 ```{r eval=FALSE}
       mainPanel(
@@ -847,4 +843,3 @@ server <- function(input, output) {
 shinyApp(ui = ui, server = server)
 
 ```
-
