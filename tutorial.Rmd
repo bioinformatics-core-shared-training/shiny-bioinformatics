@@ -21,6 +21,8 @@ You will need the following R packages to run this tutorial
 install.packages("shiny")
 install.packages("tidyverse")
 install.packages("plotly")
+install.packages("DT")
+install.packages("highcharter")
 source("http://www.bioconductor.org/biocLite.R")
 biocLite("breastCancerNKI")
 

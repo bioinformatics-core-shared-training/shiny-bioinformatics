@@ -131,6 +131,8 @@ $(document).ready(function () {
 <pre class="r"><code>install.packages(&quot;shiny&quot;)
 install.packages(&quot;tidyverse&quot;)
 install.packages(&quot;plotly&quot;)
+install.packages(&quot;DT&quot;)
+install.packages(&quot;highcharter&quot;)
 source(&quot;http://www.bioconductor.org/biocLite.R&quot;)
 biocLite(&quot;breastCancerNKI&quot;)</code></pre>
 </div>
@@ -176,7 +178,7 @@ biocLite(&quot;breastCancerNKI&quot;)</code></pre>
 </div>
 <p>Hitting the <strong>Run App</strong> Button will create a new RStudio window this example app. Congratulations, you have just created your first shiny app 🎉</p>
 <p>You could also view in a web browser. <strong><em>Please note that when presented “live” the Shiny app will appear below. On the static HTML pages linked from the course website, there will be grey box below. </em></strong></p>
-<iframe data-deferred-src="app7f6b3feebaac66cea855ad77228b686b/?w=&amp;__subapp__=1" width="100%" height="520" class="shiny-frame shiny-frame-deferred"></iframe>
+<iframe data-deferred-src="app468978923c9b5124941be4b7585b5dc2/?w=&amp;__subapp__=1" width="100%" height="520" class="shiny-frame shiny-frame-deferred"></iframe>
 <p>In this example app we are creating a histogram of a pre-defined dataset (<code>faithful</code>), with the user being able to specify how many bins to use in the histogram. Let’s first look at the part of the script that defines the interface.</p>
 <pre class="r"><code>ui &lt;- fluidPage(
    
@@ -227,7 +229,7 @@ biocLite(&quot;breastCancerNKI&quot;)</code></pre>
         img(src=&quot;http://www.cruk.cam.ac.uk/sites/all/themes/cambridge_theme/images/interface/main-logo-small.png&quot;)
       ),
       ######</code></pre>
-<iframe data-deferred-src="appcc3b085e79b2810119ddb9ffec1f64f2/?w=&amp;__subapp__=1" width="100%" height="520" class="shiny-frame shiny-frame-deferred"></iframe>
+<iframe data-deferred-src="appe1a5965d1f26336c98eee1efdb3ce760/?w=&amp;__subapp__=1" width="100%" height="520" class="shiny-frame shiny-frame-deferred"></iframe>
 </div>
 <div id="section-inputs" class="section level2">
 <h2>Inputs</h2>
@@ -312,7 +314,7 @@ server &lt;- function(input, output) {
 }</code></pre>
 <p>In this example, the value of <code>input$colour</code> is passed directly to the plotting function. This works because <code>red</code>, <code>green</code>, <code>blue</code> are valid colours. We could change the values displayed in the drop-down to be more human-readable, but need to make sure they get transformed appropriately. Changing the configuration of the <code>radioButtons</code> to the following wouldn’t work.</p>
 <pre class="r"><code>        radioButtons(&quot;colour&quot;,&quot;Histogram Colour&quot;,choices=c(&quot;I want Red&quot;,&quot;I want Green&quot;,&quot;I want Blue&quot;),selected=&quot;I want Red&quot;),</code></pre>
-<iframe data-deferred-src="appebde101af87e41544d4b1a78236b5dc5/?w=&amp;__subapp__=1" width="100%" height="520" class="shiny-frame shiny-frame-deferred"></iframe>
+<iframe data-deferred-src="app2757cc5ad371b5f90ff5b63952b04a37/?w=&amp;__subapp__=1" width="100%" height="520" class="shiny-frame shiny-frame-deferred"></iframe>
 <p>However, we can access the value of <code>input$colour</code> and create a new variable accordingly. For example we could have some kind of control structure</p>
 <pre class="r"><code>server &lt;- function(input, output) {
    
@@ -350,7 +352,7 @@ server &lt;- function(input, output) {
 <li>the RGB value for red is <code>255,0,0</code></li>
 </ul></li>
 </ul>
-<iframe data-deferred-src="app4c1c5d0e012a8c4c46ccd0d2f1794a77/?w=&amp;__subapp__=1" width="100%" height="520" class="shiny-frame shiny-frame-deferred"></iframe>
+<iframe data-deferred-src="appba8cbe49f744af9565813818c14d72ee/?w=&amp;__subapp__=1" width="100%" height="520" class="shiny-frame shiny-frame-deferred"></iframe>
 </div>
 <div id="section-outputs" class="section level2">
 <h2>Outputs</h2>
@@ -383,7 +385,7 @@ server &lt;- function(input, output) {
 
    })
 }</code></pre>
-<iframe data-deferred-src="appf3a6da56459559e44bba852d50c86661/?w=&amp;__subapp__=1" width="100%" height="520" class="shiny-frame shiny-frame-deferred"></iframe>
+<iframe data-deferred-src="app25912a7225ba3f9e7ffb6df71076802a/?w=&amp;__subapp__=1" width="100%" height="520" class="shiny-frame shiny-frame-deferred"></iframe>
 <p>Aside from a plot, other types of output include</p>
 <ul>
 <li><code>renderText</code></li>
@@ -425,7 +427,7 @@ server &lt;- function(input, output) {
 
 
 }</code></pre>
-<iframe data-deferred-src="app60ab8a27a03c1e84535e78f683d97739/?w=&amp;__subapp__=1" width="100%" height="800" class="shiny-frame shiny-frame-deferred"></iframe>
+<iframe data-deferred-src="app5088e77fa529c18472a032ead89f9d69/?w=&amp;__subapp__=1" width="100%" height="800" class="shiny-frame shiny-frame-deferred"></iframe>
 <p>The results panel is now getting a bit cluttered. If we wish we could change the layout so each distinct output is displayed in a different panel. This can be done with the <code>tabsetPanel</code> function. We can also add the option to view the data in an interactive table with <code>dataTableOutput</code>.</p>
 <pre class="r"><code>      mainPanel(
         tabsetPanel(
@@ -437,7 +439,7 @@ server &lt;- function(input, output) {
         )
 
       )</code></pre>
-<iframe data-deferred-src="app6e9a7f64743ddd49b5ffe5b08c76c6fa/?w=&amp;__subapp__=1" width="100%" height="520" class="shiny-frame shiny-frame-deferred"></iframe>
+<iframe data-deferred-src="app991b0dc9d6692a1cf9ab6f14f0b66760/?w=&amp;__subapp__=1" width="100%" height="520" class="shiny-frame shiny-frame-deferred"></iframe>
 <p>The final code for the app is given below:-</p>
 <pre class="r"><code>library(shiny)
 
