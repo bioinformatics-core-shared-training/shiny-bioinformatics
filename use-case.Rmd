@@ -31,6 +31,52 @@ Briefly, this dataset comprises the gene expression profiling of breast cancer p
 
 The R code for this app is available as part of the materials for this course [cancer-app.R](cancer-app.R)
 
+```{r echo=FALSE}
+library(shiny)
+
+ui <- fluidPage(
+   
+   # Application title
+   titlePanel("Interrogating the NKI breast cancer dataset"),
+   
+   sidebarLayout(
+      sidebarPanel(
+         selectInput("thegene","Gene to Analyse",
+                     choices=c("ESR1","ERBB2","PTEN"),
+                       selected  = "ESR1")
+      ),
+      
+      # Show a plot of the generated distribution
+      mainPanel(
+         plotOutput("boxplot")
+      )
+   )
+)
+
+server <- function(input, output) {
+   
+  library(breastCancerNKI)
+  
+  data(nki)
+  expression.values <- exprs(nki)
+  features <- fData(nki)
+  er.status <- pData(nki)$er
+  
+   output$boxplot <- renderPlot({
+
+     gene <- input$thegene
+     probe.id <- as.character(features$probe[match(gene, features$HUGO.gene.symbol)])
+     
+     values <- expression.values[probe.id,]
+     boxplot(values ~ er.status)
+   })
+   
+}
+
+# Run the application 
+shinyApp(ui = ui, server = server, options = list(height = 520))
+```
+
 The UI for the app will contain a drop-down where the user can select the name of the gene they wish to interrogate. For this demonstration we will provide a limited set of options and a default value of `ESR1`, which we expect to show a significant difference between the conditions.
 
 ```{r eval=FALSE}
@@ -150,51 +196,7 @@ shinyApp(ui = ui, server = server)
 
 
 
-```{r echo=FALSE}
-library(shiny)
 
-ui <- fluidPage(
-   
-   # Application title
-   titlePanel("Interrogating the NKI breast cancer dataset"),
-   
-   sidebarLayout(
-      sidebarPanel(
-         selectInput("thegene","Gene to Analyse",
-                     choices=c("ESR1","ERBB2","PTEN"),
-                       selected  = "ESR1")
-      ),
-      
-      # Show a plot of the generated distribution
-      mainPanel(
-         plotOutput("boxplot")
-      )
-   )
-)
-
-server <- function(input, output) {
-   
-  library(breastCancerNKI)
-  
-  data(nki)
-  expression.values <- exprs(nki)
-  features <- fData(nki)
-  er.status <- pData(nki)$er
-  
-   output$boxplot <- renderPlot({
-
-     gene <- input$thegene
-     probe.id <- as.character(features$probe[match(gene, features$HUGO.gene.symbol)])
-     
-     values <- expression.values[probe.id,]
-     boxplot(values ~ er.status)
-   })
-   
-}
-
-# Run the application 
-shinyApp(ui = ui, server = server, options = list(height = 520))
-```
 
 
 As we have seen previously, we can also add options to allow the user to customise the appearance of the plot
@@ -395,7 +397,7 @@ We have added a `Sys.sleep` call to make the code wait for a while before return
 
 ## Introducing "reactives"
 
-Unfortunately, there is some inefficiency into our app. The code inside the `filterByExpression` function will be triggered whenever the user requests a new plot by changing the gene name or  ***or*** the color of the plot. This code includes the steps to filter the expression data based on the gene that is currently selected. It makes sense for this code to be re-run when a new gene is selected, but not if a different colour is selected (which is the current situation). It would be much better to retrieve the data for a particular gene once only.
+Unfortunately, there is some inefficiency into our app. The code inside the `filterByExpression` function will be triggered whenever the user requests a new plot by changing the gene name ***or*** the color of the plot. This code includes the steps to filter the expression data based on the gene that is currently selected. It makes sense for this code to be re-run when a new gene is selected, but not if a different colour is selected (which is the current situation). It would be much better to retrieve the data for a particular gene once only.
 
 A solution is to define a *reactive* function. These are special functions in `shiny` that caches it's values, and will only be re-run when any of these values become outdated. 
 
@@ -422,6 +424,14 @@ Try changing the values for gene name and boxplot colour in this new shiny app. 
 For more information on reactive programming, see the [RStudio article](https://shiny.rstudio.com/articles/reactivity-overview.html)
 
 ## Other features
+
+### Dynamic tables
+
+- A [table widget](http://rstudio.github.io/DT/shiny.html) to allow users to plot any available gene
+    + uses the `DT` library
+    + the table can be sorted, filtered in a familiar manner
+    + `shiny` keeps track of which row has been clicked; which can be accessed via the `input` list
+    + see [cancer-app-4.R](cancer-app-4.R)
 
 ### Actions. e.g. downloading the plot
 
@@ -555,10 +565,5 @@ server <- function(input, output) {
 shinyApp(ui = ui, server = server, options = list(height = 750))
 ```
 
-### Dynamic tables
 
-- A [table widget](http://rstudio.github.io/DT/shiny.html) to allow users to plot any available gene
-    + uses the `DT` library
-    + the table can be sorted, filtered in a familiar manner
-    + `shiny` keeps track of which row has been clicked; which can be accessed via the `input` list
-    + see [cancer-app-4.R](cancer-app-4.R)
+
